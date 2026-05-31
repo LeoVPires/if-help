@@ -1,0 +1,91 @@
+<section class="page-header">
+  <h2>Registrar Nova Demanda</h2>
+
+  <p>Preencha os detalhes abaixo para reportar um problema no campus.</p>
+</section>
+
+<mat-card class="form-card">
+  <form [formGroup]="form" (ngSubmit)="salvar()">
+    <div class="grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Bloco / Setor</mat-label>
+
+        <mat-select formControlName="lugar">
+          @for (lugar of lugar; track lugar) {
+            <mat-option [value]="lugar">
+              {{ lugar }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Sala / Ambiente</mat-label>
+
+        <input
+          matInput
+          formControlName="ambiente"
+          placeholder="Ex: Sala 10, banheiro masculino, corredor, etc..."
+        />
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Tipo de Problema</mat-label>
+
+      <mat-select formControlName="tipoProblema">
+        @for (tipo of problemas; track tipo) {
+          <mat-option [value]="tipo">
+            {{ tipo }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (role === 'admin') {
+      <div class="grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Prioridade</mat-label>
+
+          <mat-select formControlName="prioridade">
+            <mat-option value="baixa"> Baixa </mat-option>
+
+            <mat-option value="media"> Média </mat-option>
+
+            <mat-option value="alta"> Alta </mat-option>
+
+            <mat-option value="critica"> Crítica </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Responsável</mat-label>
+
+          <mat-select formControlName="responsavelId">
+            @for (servidor of servidores; track servidor) {
+              <mat-option [value]="servidor">
+                {{ servidor }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+    }
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Descrição Detalhada</mat-label>
+
+      <textarea matInput rows="5" formControlName="descricao"> </textarea>
+    </mat-form-field>
+
+    <div class="actions">
+      <button mat-button type="button">Cancelar</button>
+
+      <button mat-flat-button type="submit">
+        <mat-icon>send</mat-icon>
+
+        Enviar Chamado
+      </button>
+    </div>
+  </form>
+</mat-card>

@@ -1,0 +1,35 @@
+<aside class="sidebar">
+  <div class="logo-section">
+    <div class="logo-icon">
+      <mat-icon>school</mat-icon>
+    </div>
+
+    <div>
+      <h2>IF, Help!</h2>
+      <span>Demandas</span>
+    </div>
+  </div>
+
+  <nav class="menu">
+    @for (item of items(); track item.route) {
+      <a [routerLink]="item.route" routerLinkActive="active" class="menu-item">
+        <mat-icon>
+          {{ item.icon }}
+        </mat-icon>
+
+        <span>
+          {{ item.label }}
+        </span>
+      </a>
+    }
+  </nav>
+
+  <div class="user-card">
+    <div class="avatar">AL</div>
+
+    <div class="user-info">
+      <strong>Portal do Aluno</strong>
+      <span>aluno&#64;ifce.edu.br</span>
+    </div>
+  </div>
+</aside>
