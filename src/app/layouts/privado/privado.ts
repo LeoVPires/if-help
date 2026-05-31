@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { MenuLateral } from '../../shared/menu-lateral/menu-lateral';
 
 @Component({
   selector: 'app-privado',
-  imports: [],
+  imports: [RouterOutlet, MenuLateral],
   templateUrl: './privado.html',
   styleUrl: './privado.scss',
 })
