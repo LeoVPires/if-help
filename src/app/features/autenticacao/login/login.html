@@ -1,0 +1,43 @@
+<div class="login-container">
+  <mat-card class="login-card" appearance="outlined">
+    <header class="card-header">
+      <div class="logo-wrapper">
+        <mat-icon aria-hidden="false" aria-label="IF Help logo" fontIcon="school"></mat-icon>
+      </div>
+      <h1 class="brand-name">IF, Help!</h1>
+      <span class="campus-label">Campus Maracanaú</span>
+    </header>
+
+    <div class="card-content">
+      <h2 class="welcome-title">Bem-vindo ao Portal de Demandas</h2>
+      <p class="instruction-text">
+        Acesse com seu e-mail institucional para gerenciar demandas do campus.
+      </p>
+
+      <button mat-flat-button class="google-btn" (click)="loginWithGoogle()">
+        <i class="fa-brands fa-google"></i>
+        Entrar com Google Acadêmico
+      </button>
+
+      <div class="footer-info">
+        <p>Acesso restrito a usuários <strong>&#64;ifce.edu.br</strong></p>
+        <a href="#" class="support-link">Precisa de ajuda? <strong>Suporte TI</strong></a>
+      </div>
+    </div>
+  </mat-card>
+
+  <footer class="page-footer">
+    <div class="footer-item">
+      <mat-icon aria-hidden="true" fontIcon="security"></mat-icon>
+      <span>Acesso Seguro</span>
+    </div>
+    <div class="footer-item">
+      <mat-icon aria-hidden="true" fontIcon="privacy_tip"></mat-icon>
+      <span>Privacidade Garantida</span>
+    </div>
+    <div class="footer-item">
+      <mat-icon aria-hidden="true" fontIcon="visibility"></mat-icon>
+      <span>Transparência Pública</span>
+    </div>
+  </footer>
+</div>
