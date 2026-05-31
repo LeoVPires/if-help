@@ -1,1 +1,23 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+@use 'app/tema/tema' as custom;
+
+$light-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: light,
+      primary: custom.$primary-palette,
+      tertiary: custom.$tertiary-palette,
+      use-system-variables: true,
+    ),
+    typography: (
+      use-system-variables: true,
+    ),
+  )
+);
+
+html {
+  @include mat.all-component-themes($light-theme);
+
+  @include mat.system-level-colors($light-theme);
+  @include mat.system-level-typography($light-theme);
+}
