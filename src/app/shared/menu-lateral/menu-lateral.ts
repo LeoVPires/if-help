@@ -19,6 +19,8 @@ interface MenuLateralItem {
 export class MenuLateral {
   @Input() role: 'admin' | 'aluno' = 'aluno';
 
+  // role = this.authService.currentUser()?.role; quando ligar com o firebase..
+
   private menuItems = signal<MenuLateralItem[]>([
     {
       label: 'Dashboard Público',
