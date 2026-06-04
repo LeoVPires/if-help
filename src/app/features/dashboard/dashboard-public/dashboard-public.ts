@@ -1,122 +1,100 @@
 import {
-  AfterViewInit,
   Component,
   Input,
+  ViewChild,
   OnChanges,
   SimpleChanges,
-  ViewChild,
+  AfterViewInit,
 } from '@angular/core';
-
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-
+import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-
-import { Chamado } from './../../../core/modals/chamado';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-
-interface ChamadoPublicRow {
-  id: string;
-
-  localizacao: string;
-
-  categoria: string;
-
-  status: string;
-
-  abertura: string;
-}
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { Chamado } from '../../../core/modals/chamado';
 
 @Component({
   selector: 'app-dashboard-public',
   standalone: true,
   imports: [
-    ReactiveFormsModule,
+    CommonModule,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
-    MatCardModule,
     MatInputModule,
     MatIconModule,
+    MatCardModule,
   ],
   templateUrl: './dashboard-public.html',
   styleUrl: './dashboard-public.scss',
 })
-export class DashboardPublic implements AfterViewInit, OnChanges {
-  @Input({ required: true })
-  chamados: Chamado[] = [];
+export class DashboardPublic implements OnChanges, AfterViewInit {
+  @Input() chamados: Chamado[] = [];
 
-  displayedColumns = ['localizacao', 'categoria', 'status', 'abertura'];
+  // O DataSource do Material é o que faz a mágica da tabela funcionar
+  dataSource = new MatTableDataSource<Chamado>();
 
-  searchControl = new FormControl('');
+  // As colunas que serão exibidas (sem o ID e sem as Ações)
+  displayedColumns: string[] = ['localizacao', 'demanda', 'status', 'abertura'];
 
-  selectedStatus = 'todos';
+  // Contadores para os Cards Superiores
+  countAberto = 0;
+  countExecucao = 0;
+  countConcluido = 0;
 
-  dataSource = new MatTableDataSource<ChamadoPublicRow>([]);
+  // Guarda qual card está ativo no momento para o filtro
+  activeStatusFilter: string | null = null;
 
-  @ViewChild(MatPaginator)
-  paginator!: MatPaginator;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
-  @ViewChild(MatSort)
-  sort!: MatSort;
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['chamados']) {
-      this.dataSource.data = this.chamados.map((chamado) => ({
-        id: chamado.id,
-
-        localizacao: `${chamado.bloco} - ${chamado.sala}`,
-
-        categoria: chamado.categoria,
-
-        status: chamado.status,
-
-        abertura: this.formatarData(chamado.criadoEm),
-      }));
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['chamados'] && this.chamados) {
+      this.dataSource.data = this.chamados;
+      this.updateCounters();
+      this.setupCustomFilter();
     }
   }
 
-  ngAfterViewInit(): void {
+  ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
-
     this.dataSource.sort = this.sort;
-
-    this.configurarFiltros();
   }
 
-  private configurarFiltros() {
-    this.dataSource.filterPredicate = (item, filter) => {
-      const value = filter.toLowerCase();
+  // Filtro geral da barra de pesquisa
+  applySearchFilter(event: Event) {
+    const filterValue = (event.target as HTMLInputElement).value;
+    // Se estiver filtrando por texto, limpamos o filtro de status dos cards
+    this.activeStatusFilter = null;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+  }
 
-      return (
-        item.localizacao.toLowerCase().includes(value) ||
-        item.categoria.toLowerCase().includes(value)
-      );
+  // Filtro ao clicar nos Cards Superiores
+  toggleStatusFilter(status: string) {
+    if (this.activeStatusFilter === status) {
+      // Se clicar no mesmo card, desativa o filtro
+      this.activeStatusFilter = null;
+      this.dataSource.filter = '';
+    } else {
+      this.activeStatusFilter = status;
+      this.dataSource.filter = status.trim().toLowerCase();
+    }
+  }
+
+  private updateCounters() {
+    this.countAberto = this.chamados.filter((c) => c.status === 'Aberto').length;
+    this.countExecucao = this.chamados.filter((c) => c.status === 'Em Execução').length;
+    this.countConcluido = this.chamados.filter((c) => c.status === 'Fechado').length;
+  }
+
+  private setupCustomFilter() {
+    // Ensina o Material Table a buscar em campos combinados (ex: bloco + sala)
+    this.dataSource.filterPredicate = (data: Chamado, filter: string) => {
+      const dataStr =
+        `${data.bloco} ${data.sala} ${data.categoria} ${data.descricao} ${data.status}`.toLowerCase();
+      return dataStr.includes(filter);
     };
-
-    this.searchControl.valueChanges.subscribe((value) => {
-      this.dataSource.filter = (value ?? '').trim().toLowerCase();
-    });
-  }
-
-  filterStatus(status: string) {
-    this.selectedStatus = status;
-
-    this.dataSource.filterPredicate = (item) => {
-      if (status === 'todos') {
-        return true;
-      }
-
-      return item.status === status;
-    };
-
-    this.dataSource.filter = Math.random().toString();
-  }
-
-  private formatarData(dataIso: string): string {
-    return new Date(dataIso).toLocaleDateString('pt-BR');
   }
 }

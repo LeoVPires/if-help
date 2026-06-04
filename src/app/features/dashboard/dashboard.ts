@@ -14,7 +14,7 @@ import { ChamadosService } from '../../core/services/chamados';
 export class Dashboard implements OnInit {
   chamados: Chamado[] = [];
 
-  role: 'admin' | 'aluno' = 'aluno';
+  role: 'admin' | 'aluno' = 'admin';
 
   constructor(private chamadosService: ChamadosService) {}
 
