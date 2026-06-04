@@ -1,0 +1,96 @@
+<section class="dashboard-header">
+  <div>
+    <h1>Monitor de Demandas</h1>
+
+    <p>Visualize o status dos chamados abertos no campus em tempo real.</p>
+  </div>
+
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-icon matPrefix> search </mat-icon>
+
+    <input matInput [formControl]="searchControl" placeholder="Filtrar por local ou categoria" />
+  </mat-form-field>
+</section>
+
+<section class="stats">
+  <mat-card class="stat-card" (click)="filterStatus('Aberto')">
+    <span>Em Aberto</span>
+
+    <strong> 24 </strong>
+  </mat-card>
+
+  <mat-card class="stat-card" (click)="filterStatus('Em Execução')">
+    <span>Em Execução</span>
+
+    <strong> 12 </strong>
+  </mat-card>
+
+  <mat-card class="stat-card" (click)="filterStatus('Concluído')">
+    <span>Resolvidos Hoje</span>
+
+    <strong> 8 </strong>
+  </mat-card>
+</section>
+
+<div class="table-container">
+  <table mat-table matSort [dataSource]="dataSource">
+    <ng-container matColumnDef="localizacao">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Localização</th>
+
+      <td mat-cell *matCellDef="let row">
+        <div class="location">
+          <mat-icon> location_on </mat-icon>
+
+          {{ row.localizacao }}
+        </div>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="categoria">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo de Demanda</th>
+
+      <td mat-cell *matCellDef="let row">
+        {{ row.categoria }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+
+      <td mat-cell *matCellDef="let row">
+        <span
+          class="status-chip"
+          [class.aberto]="row.status === 'Aberto'"
+          [class.execucao]="row.status === 'Em Execução'"
+          [class.concluido]="row.status === 'Concluído'"
+        >
+          {{ row.status }}
+        </span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="abertura">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Abertura</th>
+
+      <td mat-cell *matCellDef="let row">
+        {{ row.abertura }}
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+
+  <mat-paginator [pageSize]="10" [pageSizeOptions]="[10, 25, 50]"> </mat-paginator>
+</div>
+
+<mat-card class="info-card">
+  <div class="info-header">
+    <mat-icon> info </mat-icon>
+
+    <h3>Transparência Pública</h3>
+  </div>
+
+  <p>Para garantir a privacidade, os nomes dos solicitantes não são exibidos publicamente.</p>
+</mat-card>
