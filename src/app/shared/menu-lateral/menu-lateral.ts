@@ -31,7 +31,7 @@ export class MenuLateral {
     {
       label: 'Abrir Chamado',
       icon: 'add_circle',
-      route: '/chamados/novo',
+      route: '/chamado/novo',
       roles: ['admin', 'aluno'],
     },
 

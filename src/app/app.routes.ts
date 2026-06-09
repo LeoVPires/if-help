@@ -4,6 +4,7 @@ import { Privado } from './layouts/privado/privado';
 import { Publico } from './layouts/publico/publico';
 import { AbrirChamado } from './features/abrir-chamado/abrir-chamado';
 import { Dashboard } from './features/dashboard/dashboard';
+import { EditarChamado } from './features/editar-chamado/editar-chamado';
 
 export const routes: Routes = [
   {
@@ -21,12 +22,16 @@ export const routes: Routes = [
     component: Privado,
     children: [
       {
-        path: 'chamados/novo',
+        path: 'chamado/novo',
         component: AbrirChamado,
       },
       {
         path: 'dashboard',
         component: Dashboard,
+      },
+      {
+        path: 'chamado/editar',
+        component: EditarChamado,
       },
     ],
   },

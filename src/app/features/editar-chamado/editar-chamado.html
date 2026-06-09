@@ -1,0 +1,222 @@
+<div class="page-wrapper">
+  <header class="detail-header">
+    <div class="left-header">
+      <button mat-icon-button (click)="voltar()" class="back-btn">
+        <mat-icon>keyboard_backspace</mat-icon>
+      </button>
+
+      <div class="title-meta">
+        <div class="title-row">
+          <h1>Chamado #{{ chamadoAtual.id }}</h1>
+
+          <span class="status-indicator" [ngClass]="chamadoForm.get('status')?.value | lowercase">
+            {{ chamadoForm.get('status')?.value }}
+          </span>
+        </div>
+
+        <p class="timestamp">Registrado em 24 de Outubro, 2023 às 09:15</p>
+      </div>
+    </div>
+
+    <div class="right-header">
+      <div class="badge-priority" [ngClass]="chamadoForm.get('prioridade')?.value | lowercase">
+        <mat-icon>outlined_flag</mat-icon>
+        Prioridade: {{ chamadoForm.get('prioridade')?.value }}
+      </div>
+
+      @if (chamadoAtual.status !== 'Fechado') {
+        <button mat-stroked-button color="warn" (click)="fecharChamado()">
+          <mat-icon>lock</mat-icon>
+          Fechar chamado
+        </button>
+      }
+
+      <button mat-flat-button [color]="isEditing ? 'accent' : 'primary'" (click)="toggleEdit()">
+        <mat-icon>{{ isEditing ? 'close' : 'edit' }}</mat-icon>
+        {{ isEditing ? 'Cancelar Edição' : 'Editar chamado' }}
+      </button>
+    </div>
+  </header>
+
+  <form [formGroup]="chamadoForm" (ngSubmit)="salvarAlteracoes()" class="content-grid">
+    <div class="main-column">
+      <mat-card appearance="outlined" class="info-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>assignment</mat-icon>
+            Informações do Chamado
+          </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="fields-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Bloco</mat-label>
+              <input matInput formControlName="bloco" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Sala</mat-label>
+              <input matInput formControlName="sala" />
+            </mat-form-field>
+          </div>
+
+          <div class="fields-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Setor/Categoria Responsável</mat-label>
+              <input matInput formControlName="categoria" />
+            </mat-form-field>
+
+            @if (isEditing) {
+              <mat-form-field appearance="outline">
+                <mat-label>Prioridade</mat-label>
+
+                <mat-select formControlName="prioridade">
+                  @for (p of prioridadeOpcoes; track p) {
+                    <mat-option [value]="p">
+                      {{ p }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            }
+
+            @if (isEditing) {
+              <mat-form-field appearance="outline">
+                <mat-label>Status</mat-label>
+
+                <mat-select formControlName="status">
+                  @for (s of statusOpcoes; track s) {
+                    <mat-option [value]="s">
+                      {{ s }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            }
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width text-area-field">
+            <mat-label>Descrição do Problema</mat-label>
+
+            <textarea matInput rows="5" formControlName="descricao"></textarea>
+          </mat-form-field>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined" class="solicitante-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>person</mat-icon>
+            Solicitante
+          </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content class="user-profile">
+          <div class="avatar">RC</div>
+
+          <div class="user-details">
+            <h3>Ricardo Cavalcante</h3>
+            <p class="email">{{ chamadoAtual.criadoPor }}</p>
+            <p class="matricula">Matrícula: 2023110450023</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      @if (isEditing) {
+        <div class="form-actions-bar">
+          <button mat-flat-button color="primary" type="submit" class="save-all-btn">
+            <mat-icon>save</mat-icon>
+            Salvar Alterações do Chamado
+          </button>
+        </div>
+      }
+    </div>
+
+    <div class="side-column">
+      <mat-card appearance="outlined" class="history-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>history</mat-icon>
+            Histórico de Atividade
+          </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="timeline">
+            @for (item of historico; track item.id) {
+              <div class="timeline-item" [ngClass]="item.classe">
+                <div class="timeline-badge"></div>
+
+                <div class="timeline-panel">
+                  <div class="timeline-heading">
+                    <h4>{{ item.titulo }}</h4>
+                    <small class="text-muted">
+                      {{ item.tempo }}
+                    </small>
+                  </div>
+
+                  <div class="timeline-body">
+                    <p>{{ item.descricao }}</p>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined" class="notes-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>chat_bubble_outline</mat-icon>
+            Notas Internas
+          </mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="notes-list">
+            @for (nota of notasInternas; track nota.id) {
+              <div class="note-box">
+                <p class="note-text">
+                  {{ nota.texto }}
+                </p>
+
+                <div class="note-meta">— {{ nota.autor }}, {{ nota.criadoEm }}</div>
+              </div>
+            }
+          </div>
+
+          <div class="add-note-box">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Adicionar observação...</mat-label>
+
+              <textarea
+                matInput
+                rows="3"
+                formControlName="novaNota"
+                placeholder="Escreva detalhes técnicos ou justificativas aqui..."
+              ></textarea>
+
+              @if (chamadoForm.get('novaNota')?.hasError('required')) {
+                <mat-error>
+                  A nota é obrigatória para salvar edições ou fechar o chamado.
+                </mat-error>
+              }
+            </mat-form-field>
+
+            <button
+              mat-stroked-button
+              type="button"
+              class="add-note-btn"
+              (click)="adicionarNotaAvulsa()"
+            >
+              <mat-icon>add</mat-icon>
+              Registrar Apenas Nota
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </form>
+</div>
