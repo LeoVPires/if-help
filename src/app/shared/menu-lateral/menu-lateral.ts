@@ -17,13 +17,13 @@ interface MenuLateralItem {
   styleUrl: './menu-lateral.scss',
 })
 export class MenuLateral {
-  @Input() role: 'admin' | 'aluno' = 'aluno';
+  @Input() role: 'admin' | 'aluno' = 'admin';
 
   // role = this.authService.currentUser()?.role; quando ligar com o firebase..
 
   private menuItems = signal<MenuLateralItem[]>([
     {
-      label: 'Dashboard Público',
+      label: 'Chamados',
       icon: 'dashboard',
       route: '/dashboard',
       roles: ['admin', 'aluno'],

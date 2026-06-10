@@ -5,6 +5,7 @@ import { Publico } from './layouts/publico/publico';
 import { AbrirChamado } from './features/abrir-chamado/abrir-chamado';
 import { Dashboard } from './features/dashboard/dashboard';
 import { EditarChamado } from './features/editar-chamado/editar-chamado';
+import { MeusChamados } from './features/meus-chamados/meus-chamados';
 
 export const routes: Routes = [
   {
@@ -32,6 +33,10 @@ export const routes: Routes = [
       {
         path: 'chamado/editar',
         component: EditarChamado,
+      },
+      {
+        path: 'chamado/meus',
+        component: MeusChamados,
       },
     ],
   },

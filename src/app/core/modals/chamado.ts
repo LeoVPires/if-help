@@ -1,4 +1,4 @@
-export type StatusChamado = 'Aberto' | 'Em Execução' | 'Fechado';
+export type StatusChamado = 'Aberto' | 'Em Execução' | 'Fechado' | 'Cancelado';
 
 export type PrioridadeChamado = 'Baixa' | 'Média' | 'Alta' | 'Crítica';
 
