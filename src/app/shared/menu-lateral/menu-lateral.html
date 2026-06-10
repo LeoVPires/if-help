@@ -11,9 +11,9 @@
   </div>
 
   <nav class="menu">
-    @for (item of items(); track item.route) {
+    @for (item of items; track item.route) {
       <a [routerLink]="item.route" routerLinkActive="active" class="menu-item">
-        <mat-icon>
+        <mat-icon fontSet="material-symbols-rounded">
           {{ item.icon }}
         </mat-icon>
 

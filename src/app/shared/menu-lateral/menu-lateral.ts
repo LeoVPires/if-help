@@ -37,9 +37,15 @@ export class MenuLateral {
 
     {
       label: 'Gerenciar Chamados',
-      icon: 'engineering',
-      route: '/admin/chamados',
+      icon: 'dashboard_2_gear',
+      route: '/chamado/editar',
       roles: ['admin'],
+    },
+    {
+      label: 'Meus Chamados',
+      icon: 'dashboard_2_edit',
+      route: '/chamado/meus',
+      roles: ['admin', 'aluno'],
     },
     {
       label: 'Configurações',
@@ -55,5 +61,7 @@ export class MenuLateral {
     },
   ]);
 
-  items = computed(() => this.menuItems().filter((item) => item.roles.includes(this.role)));
+  get items() {
+    return this.menuItems().filter((item) => item.roles.includes(this.role));
+  }
 }

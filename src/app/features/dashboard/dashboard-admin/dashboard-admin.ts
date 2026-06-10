@@ -5,6 +5,8 @@ import {
   OnChanges,
   SimpleChanges,
   AfterViewInit,
+  inject,
+  Inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -20,6 +22,13 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatBadgeModule } from '@angular/material/badge';
+import {
+  MatDialogModule,
+  MatDialog,
+  MAT_DIALOG_DATA,
+  MatDialogRef,
+} from '@angular/material/dialog';
 
 import { Chamado } from '../../../core/modals/chamado';
 
@@ -47,6 +56,8 @@ interface FilterState {
     MatButtonModule,
     MatCheckboxModule,
     MatTooltipModule,
+    MatBadgeModule,
+    MatDialogModule,
   ],
   templateUrl: './dashboard-admin.html',
   styleUrl: './dashboard-admin.scss',
@@ -56,7 +67,9 @@ export class DashboardAdmin implements OnChanges, AfterViewInit {
 
   dataSource = new MatTableDataSource<Chamado>();
   displayedColumns: string[] = ['id', 'localizacao', 'demanda', 'status', 'acoes'];
-  expandedElement: Chamado | null = null; // Controla a linha expandida
+
+  // Injeta o serviço de Dialog
+  dialog = inject(MatDialog);
 
   // Contadores dos Cards
   countSugestoesAgrupamento = 0;
@@ -104,7 +117,6 @@ export class DashboardAdmin implements OnChanges, AfterViewInit {
   }
 
   private atualizarFiltroDataSource() {
-    // O Material Table espera uma string. Transformamos nosso objeto em string JSON.
     this.dataSource.filter = JSON.stringify(this.filtros);
   }
 
@@ -113,18 +125,15 @@ export class DashboardAdmin implements OnChanges, AfterViewInit {
       const f: FilterState = JSON.parse(filterStr);
       let match = true;
 
-      // 1. Filtro de Texto (Busca em ID, Bloco, Sala e Descrição)
       if (f.search) {
         const textToSearch =
           `${data.id} ${data.bloco} ${data.sala} ${data.descricao}`.toLowerCase();
         if (!textToSearch.includes(f.search.toLowerCase())) match = false;
       }
 
-      // 2. Filtro de Categoria e Prioridade
       if (f.categoria && data.categoria !== f.categoria) match = false;
       if (f.prioridade && data.prioridade !== f.prioridade) match = false;
 
-      // 3. Filtro dos Cards
       if (f.cardFiltro === 'alta' && data.prioridade !== 'Alta' && data.prioridade !== 'Crítica')
         match = false;
       if (f.cardFiltro === 'triagem' && (data.atribuidoPara !== '' || data.status !== 'Aberto'))
@@ -144,10 +153,9 @@ export class DashboardAdmin implements OnChanges, AfterViewInit {
       (c) => c.atribuidoPara === '' && c.status === 'Aberto',
     ).length;
 
-    // Calcula sugestões de agrupamento (chamados com mesmo idGrupo que ainda estão abertos)
     const grupos = this.chamados.filter((c) => c.status === 'Aberto').map((c) => c.idGrupo);
     const gruposDuplicados = grupos.filter((item, index) => grupos.indexOf(item) !== index);
-    // Removemos duplicatas da lista de grupos duplicados para ter a contagem de chamados afetados
+
     this.countSugestoesAgrupamento = this.chamados.filter(
       (c) => c.status === 'Aberto' && gruposDuplicados.includes(c.idGrupo),
     ).length;
@@ -159,14 +167,69 @@ export class DashboardAdmin implements OnChanges, AfterViewInit {
     );
   }
 
-  // Busca chamados semelhantes para mostrar dentro do Expansion Panel
   getChamadosParaAgrupar(chamadoBase: Chamado): Chamado[] {
     return this.chamados.filter(
       (c) => c.idGrupo === chamadoBase.idGrupo && c.id !== chamadoBase.id && c.status === 'Aberto',
     );
   }
 
-  toggleExpand(element: Chamado) {
-    this.expandedElement = this.expandedElement === element ? null : element;
+  // Novo método para abrir o Dialog
+  abrirDialogAgrupamento(element: Chamado) {
+    const chamadosParaAgrupar = this.getChamadosParaAgrupar(element);
+
+    // Só abre se tiver itens para agrupar
+    if (chamadosParaAgrupar.length > 0) {
+      this.dialog.open(AgrupamentoDialogComponent, {
+        width: '600px',
+        data: { chamadoBase: element, chamadosParaAgrupar },
+      });
+    }
   }
+}
+
+// =========================================================================
+// COMPONENTE DO DIALOG (Pode ser colocado no mesmo arquivo ou em um separado)
+// =========================================================================
+
+@Component({
+  selector: 'app-agrupamento-dialog',
+  standalone: true,
+  imports: [CommonModule, MatDialogModule, MatButtonModule, MatCheckboxModule, MatIconModule],
+  template: `
+    <h2 mat-dialog-title>
+      <mat-icon style="vertical-align: middle;">lightbulb</mat-icon>
+      Sugestão de Agrupamento Inteligente
+    </h2>
+    <mat-dialog-content>
+      <p style="margin-bottom: 16px;">
+        Foram encontrados outros chamados abertos neste mesmo local para a categoria
+        <strong>{{ data.chamadoBase.categoria }}</strong
+        >.
+      </p>
+
+      <div class="checkbox-list" style="display: flex; flex-direction: column; gap: 8px;">
+        @for (sug of data.chamadosParaAgrupar; track sug.id) {
+          <mat-checkbox color="primary">
+            <strong>#{{ sug.id }}</strong> - {{ sug.descricao }}
+            <span style="color: #666; font-size: 0.9em;">(Aberto por: {{ sug.criadoPor }})</span>
+          </mat-checkbox>
+        } @empty {
+          <p class="text-muted">Nenhum chamado pendente encontrado para agrupar neste local.</p>
+        }
+      </div>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button mat-stroked-button mat-dialog-close>Cancelar</button>
+      @if (data.chamadosParaAgrupar.length > 0) {
+        <button mat-flat-button color="primary">Confirmar e Agrupar Selecionados</button>
+      }
+    </mat-dialog-actions>
+  `,
+})
+export class AgrupamentoDialogComponent {
+  constructor(
+    public dialogRef: MatDialogRef<AgrupamentoDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { chamadoBase: Chamado; chamadosParaAgrupar: Chamado[] },
+  ) {}
 }
