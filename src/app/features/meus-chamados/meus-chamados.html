@@ -1,0 +1,138 @@
+<div class="dashboard-container">
+  <header class="dash-header">
+    <div class="title-area">
+      <h1>Meus Chamados</h1>
+      <p>Acompanhe, gerencie e cancele suas solicitações abertas no campus.</p>
+    </div>
+    <div class="header-actions">
+      <button mat-flat-button color="primary" (click)="atualizarDados()">
+        <mat-icon>refresh</mat-icon> Atualizar
+      </button>
+    </div>
+  </header>
+
+  <div class="filters-row">
+    <mat-form-field appearance="outline" class="filter-search" style="flex: 1">
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        (keyup)="aplicarFiltroTexto($event)"
+        placeholder="Buscar por ID, local ou descrição do seu chamado..."
+      />
+    </mat-form-field>
+  </div>
+
+  <div class="summary-cards">
+    <mat-card
+      appearance="outlined"
+      class="stat-card"
+      [class.active]="filtros.cardFiltro === 'abertos'"
+      (click)="toggleCardFilter('abertos')"
+    >
+      <mat-card-subtitle>Meus Abertos</mat-card-subtitle>
+      <mat-card-title>{{ countAbertos | number: '2.0' }}</mat-card-title>
+    </mat-card>
+
+    <mat-card
+      appearance="outlined"
+      class="stat-card"
+      [class.active]="filtros.cardFiltro === 'andamento'"
+      (click)="toggleCardFilter('andamento')"
+    >
+      <mat-card-subtitle>Em Andamento</mat-card-subtitle>
+      <mat-card-title>{{ countAndamento | number: '2.0' }}</mat-card-title>
+    </mat-card>
+
+    <mat-card
+      appearance="outlined"
+      class="stat-card"
+      [class.active]="filtros.cardFiltro === 'historico'"
+      (click)="toggleCardFilter('historico')"
+    >
+      <mat-card-subtitle>Histórico (Resolvidos)</mat-card-subtitle>
+      <mat-card-title>{{ countHistorico | number: '2.0' }}</mat-card-title>
+    </mat-card>
+  </div>
+
+  <div class="table-container mat-elevation-z0">
+    <table mat-table [dataSource]="dataSource" matSort>
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
+        <td mat-cell *matCellDef="let element">
+          <strong>#{{ element.id }}</strong>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="localizacao">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Local e Sala</th>
+        <td mat-cell *matCellDef="let element">
+          <div class="cell-location">
+            <mat-icon>location_on</mat-icon> <span>{{ element.bloco }}</span>
+          </div>
+          <small class="text-muted">{{ element.sala }}</small>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="demanda">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Demanda e Contexto</th>
+        <td mat-cell *matCellDef="let element">
+          <span class="demand-desc">{{ element.descricao }}</span>
+          <div class="tags-area">
+            <span class="badge-tag">{{ element.categoria }}</span>
+            <span class="badge-tag prioridade" [ngClass]="element.prioridade | lowercase">
+              {{ element.prioridade }}
+            </span>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+        <td mat-cell *matCellDef="let element">
+          <strong [ngClass]="{ 'text-execution': element.status === 'Em Execução' }">
+            {{ element.status }}
+          </strong>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="acoes">
+        <th mat-header-cell *matHeaderCellDef>Ações</th>
+        <td mat-cell *matCellDef="let element">
+          @if (
+            element.status !== 'Em Execução' &&
+            element.status !== 'Resolvido' &&
+            element.status !== 'Cancelado'
+          ) {
+            <button
+              mat-icon-button
+              color="warn"
+              matTooltip="Cancelar Chamado"
+              (click)="abrirDialogCancelamento(element)"
+            >
+              <mat-icon>cancel</mat-icon>
+            </button>
+          } @else if (element.status === 'Em Execução') {
+            <span matTooltip="Não é possível cancelar um chamado em execução técnica.">
+              <button mat-icon-button disabled>
+                <mat-icon style="color: #ccc">block</mat-icon>
+              </button>
+            </span>
+          } @else {
+            <span class="text-muted" style="font-size: 0.85em">Finalizado</span>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let element; columns: displayedColumns" class="element-row"></tr>
+
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell empty-state" colspan="5">
+          Você não possui nenhum chamado aberto ou encontrado com este filtro.
+        </td>
+      </tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[10, 25, 50]"></mat-paginator>
+  </div>
+</div>

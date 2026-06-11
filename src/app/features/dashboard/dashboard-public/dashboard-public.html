@@ -1,0 +1,107 @@
+<div class="dashboard-container">
+  <header class="dash-header">
+    <div class="title-area">
+      <h1>Monitor de Demandas</h1>
+      <p>Visualize o status dos chamados abertos no campus em tempo real.</p>
+    </div>
+
+    <div class="search-area">
+      <mat-form-field appearance="outline" class="search-input">
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          (keyup)="applySearchFilter($event)"
+          placeholder="Filtrar por local ou demanda..."
+        />
+      </mat-form-field>
+    </div>
+  </header>
+
+  <div class="summary-cards">
+    <mat-card
+      appearance="outlined"
+      class="stat-card"
+      [class.active]="activeStatusFilter === 'Aberto'"
+      (click)="toggleStatusFilter('Aberto')"
+    >
+      <mat-card-subtitle>Em Aberto</mat-card-subtitle>
+      <mat-card-title class="color-primary">{{ countAberto | number: '2.0' }}</mat-card-title>
+    </mat-card>
+
+    <mat-card
+      appearance="outlined"
+      class="stat-card"
+      [class.active]="activeStatusFilter === 'Em Execução'"
+      (click)="toggleStatusFilter('Em Execução')"
+    >
+      <mat-card-subtitle>Em Execução</mat-card-subtitle>
+      <mat-card-title class="color-warning">{{ countExecucao | number: '2.0' }}</mat-card-title>
+    </mat-card>
+
+    <mat-card
+      appearance="outlined"
+      class="stat-card"
+      [class.active]="activeStatusFilter === 'Concluído'"
+      (click)="toggleStatusFilter('Concluído')"
+    >
+      <mat-card-subtitle>Resolvidos</mat-card-subtitle>
+      <mat-card-title class="color-success">{{ countConcluido | number: '2.0' }}</mat-card-title>
+    </mat-card>
+  </div>
+
+  <div class="table-container mat-elevation-z0">
+    <table mat-table [dataSource]="dataSource" matSort>
+      <ng-container matColumnDef="localizacao">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Localização</th>
+        <td mat-cell *matCellDef="let element">
+          <div class="cell-location">
+            <mat-icon>location_on</mat-icon>
+            <span>{{ element.bloco }} - {{ element.sala }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="demanda">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo de Demanda</th>
+        <td mat-cell *matCellDef="let element">
+          <span class="demand-desc">{{ element.descricao }}</span>
+          <span class="demand-cat">{{ element.categoria }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+        <td mat-cell *matCellDef="let element">
+          <span class="status-badge" [ngClass]="element.status | lowercase | slice: 0 : 4">
+            {{ element.status }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="abertura">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Abertura</th>
+        <td mat-cell *matCellDef="let element">{{ element.criadoEm | date: 'dd MMM, HH:mm' }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell empty-state" colspan="4">Nenhum chamado encontrado.</td>
+      </tr>
+    </table>
+
+    <mat-paginator
+      [pageSizeOptions]="[5, 10, 25]"
+      aria-label="Selecione a página de chamados"
+    ></mat-paginator>
+  </div>
+
+  <div class="info-footer">
+    <mat-icon color="primary">info</mat-icon>
+    <div class="info-text">
+      <strong>Transparência Pública</strong>
+      <p>Para garantir a privacidade, os nomes dos solicitantes não são exibidos publicamente.</p>
+    </div>
+  </div>
+</div>

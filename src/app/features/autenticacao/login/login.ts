@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { AuthService } from '../../../core/services/auth';
 
 @Component({
   selector: 'app-login',
@@ -12,11 +13,13 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './login.scss',
 })
 export class Login {
-  constructor() {}
+  private authService = inject(AuthService);
 
-  loginWithGoogle() {
-    console.log('Iniciando fluxo Firebase com Google Auth...');
-    // Aqui você chamará o seu AuthService
-    // Lembre-se de validar o .endsWith('@ifce.edu.br') no retorno
+  async loginWithGoogle() {
+    try {
+      await this.authService.loginWithGoogle();
+    } catch (error: any) {
+      alert(error.message || 'Erro ao autenticar com o Google.');
+    }
   }
 }
