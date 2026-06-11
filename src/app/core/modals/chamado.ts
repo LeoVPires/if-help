@@ -3,7 +3,7 @@ export type StatusChamado = 'Aberto' | 'Em Execução' | 'Fechado' | 'Cancelado'
 export type PrioridadeChamado = 'Baixa' | 'Média' | 'Alta' | 'Crítica';
 
 export interface Chamado {
-  id: string;
+  id?: string;
   bloco: string;
   sala: string;
   categoria: string;
