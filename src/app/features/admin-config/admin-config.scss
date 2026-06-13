@@ -1,0 +1,173 @@
+.page-container {
+  padding: 32px;
+  max-width: 1000px;
+  margin: 0 auto;
+
+  // SOLUÇÃO: Garante que se o conteúdo passar da tela, o navegador libere o scroll
+  height: auto;
+  min-height: 100vh;
+}
+
+.page-header {
+  margin-bottom: 40px;
+
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: var(--mat-sys-on-surface);
+  }
+
+  p {
+    margin: 0;
+    font-size: 16px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.config-section {
+  margin-bottom: 48px;
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 16px;
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+      color: var(--mat-sys-on-surface);
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+}
+
+// Estilo de lista de cards (Categorias e Locais)
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  background: var(--mat-sys-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: var(--mat-sys-outline);
+  }
+
+  .item-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
+    color: var(--mat-sys-primary);
+    margin-right: 20px;
+
+    &.local-icon {
+      background: color-mix(in srgb, var(--mat-sys-tertiary) 12%, transparent);
+      color: var(--mat-sys-tertiary);
+    }
+  }
+
+  .item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    strong {
+      font-size: 16px;
+      color: var(--mat-sys-on-surface);
+    }
+
+    span {
+      font-size: 13px;
+      color: var(--mat-sys-on-surface-variant);
+      margin-top: 2px;
+    }
+  }
+
+  .item-actions {
+    display: flex;
+    gap: 8px;
+  }
+}
+
+// Estilos da Seção de Acessos
+.access-card {
+  border-radius: 16px;
+  background: var(--mat-sys-surface);
+
+  mat-card-content {
+    padding: 24px;
+  }
+}
+
+.search-field {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.user-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--mat-sys-surface-container-lowest);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 8px;
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+
+    strong {
+      font-size: 15px;
+      color: var(--mat-sys-on-surface);
+    }
+
+    span {
+      font-size: 13px;
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+
+  .user-role {
+    width: 220px;
+
+    // Força o form-field do material ficar mais compacto na listagem
+    ::ng-deep .mat-mdc-text-field-wrapper {
+      background-color: var(--mat-sys-surface) !important;
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px;
+  color: var(--mat-sys-outline);
+  font-style: italic;
+}

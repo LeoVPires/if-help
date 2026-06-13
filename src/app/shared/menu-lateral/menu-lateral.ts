@@ -37,12 +37,6 @@ export class MenuLateral {
       roles: ['admin', 'servidor', 'aluno'],
     },
     {
-      label: 'Gerenciar Chamados',
-      icon: 'dashboard_2_gear',
-      route: '/chamado/editar',
-      roles: ['admin', 'servidor'], // Admins e servidores gerenciam demandas
-    },
-    {
       label: 'Meus Chamados',
       icon: 'dashboard_2_edit',
       route: '/chamado/meus',
@@ -52,7 +46,7 @@ export class MenuLateral {
       label: 'Configurações',
       icon: 'group',
       route: '/admin/configuracoes',
-      roles: ['admin'], // Exclusivo da "chave do castelo"
+      roles: ['admin'],
     },
     {
       label: 'Sobre o Sistema',

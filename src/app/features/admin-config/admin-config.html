@@ -1,0 +1,153 @@
+<div class="page-container">
+  <header class="page-header">
+    <h1>Configurações do Sistema</h1>
+    <p>Gerencie a estrutura organizacional, locais do campus e permissões de acesso.</p>
+  </header>
+
+  <section class="config-section">
+    <div class="section-header">
+      <div>
+        <h2>Tipos de Demanda (Categorias)</h2>
+        <p>Classificações para os chamados abertos no sistema.</p>
+      </div>
+      <button mat-stroked-button (click)="abrirModalNovo('demanda')">
+        <mat-icon>add</mat-icon> Nova Categoria
+      </button>
+    </div>
+
+    <div class="list-container">
+      @for (item of tiposDemanda(); track item.id) {
+        <div class="list-item">
+          <div class="item-icon">
+            <mat-icon>{{ item.icone }}</mat-icon>
+          </div>
+          <div class="item-content">
+            <strong>{{ item.nome }}</strong>
+            <span>{{ item.descricao }}</span>
+          </div>
+          <div class="item-actions">
+            <button mat-icon-button color="primary"><mat-icon>edit</mat-icon></button>
+            <button mat-icon-button color="warn"><mat-icon>delete</mat-icon></button>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="config-section">
+    <div class="section-header">
+      <div>
+        <h2>Locais e Ambientes</h2>
+        <p>Mapeamento físico do campus para direcionamento dos chamados.</p>
+      </div>
+      <button mat-stroked-button (click)="abrirModalNovo('local')">
+        <mat-icon>add</mat-icon> Novo Local
+      </button>
+    </div>
+
+    <mat-accordion class="locais-accordion" multi="false">
+      @for (local of locais(); track local.id) {
+        <mat-expansion-panel class="local-panel">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon class="panel-icon">{{ local.icone }}</mat-icon>
+              <strong>{{ local.nome }}</strong>
+            </mat-panel-title>
+            <mat-panel-description>
+              {{ local.ambientes.length }} ambiente(s)
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="local-actions-bar">
+            <button mat-button color="primary" (click)="editarLocal(local.id, $event)">
+              <mat-icon>edit</mat-icon> Editar Local
+            </button>
+            <button mat-button color="warn" (click)="excluirLocal(local.id, $event)">
+              <mat-icon>delete</mat-icon> Excluir Local
+            </button>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="ambientes-container">
+            <div class="ambientes-header">
+              <h3>Ambientes Cadastrados</h3>
+              <button mat-button color="primary" (click)="abrirModalNovoAmbiente(local.id)">
+                <mat-icon>add</mat-icon> Novo Ambiente
+              </button>
+            </div>
+
+            <div class="ambientes-list">
+              @for (amb of local.ambientes; track amb.id) {
+                <div class="ambiente-item">
+                  <span class="ambiente-nome">{{ amb.nome }}</span>
+                  <div class="ambiente-actions">
+                    <button mat-icon-button color="primary" title="Editar">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" title="Excluir">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              } @empty {
+                <div class="empty-state-ambiente">Nenhum ambiente cadastrado neste local.</div>
+              }
+            </div>
+          </div>
+        </mat-expansion-panel>
+      }
+    </mat-accordion>
+  </section>
+
+  <section class="config-section">
+    <div class="section-header">
+      <div>
+        <h2>Gerenciamento de Acessos</h2>
+        <p>Busque usuários pelo nome ou e-mail e altere suas permissões no sistema.</p>
+      </div>
+    </div>
+
+    <mat-card class="access-card" appearance="outlined">
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            matInput
+            placeholder="Buscar por nome ou e-mail..."
+            [ngModel]="termoBusca()"
+            (ngModelChange)="termoBusca.set($event)"
+          />
+        </mat-form-field>
+
+        <div class="users-list">
+          @for (user of usuariosFiltrados; track user.id) {
+            <div class="user-row">
+              <div class="user-info">
+                <strong>{{ user.nome }}</strong>
+                <span>{{ user.email }}</span>
+              </div>
+
+              <div class="user-role">
+                <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                  <mat-select
+                    [value]="user.role"
+                    (selectionChange)="alterarRole(user.id, $event.value)"
+                  >
+                    <mat-option value="publico">Público (Aluno)</mat-option>
+                    <mat-option value="servidor">Técnico/Servidor</mat-option>
+                    <mat-option value="admin">Administrador</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-state">
+              <p>Nenhum usuário encontrado com esse termo.</p>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </section>
+</div>

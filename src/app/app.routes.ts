@@ -8,6 +8,7 @@ import { EditarChamado } from './features/editar-chamado/editar-chamado';
 import { MeusChamados } from './features/meus-chamados/meus-chamados';
 import { homeGuard } from './core/guards/home-guard';
 import { authGuard } from './core/guards/auth-guard';
+import { AdminConfig } from './features/admin-config/admin-config';
 
 export const routes: Routes = [
   // Rota raiz (redireciona usando o homeGuard)
@@ -15,12 +16,12 @@ export const routes: Routes = [
     path: '',
     canActivate: [homeGuard],
     pathMatch: 'full',
-    component: Publico, // Garante um ponto de entrada seguro ou apenas um dummy
+    component: Publico,
   },
 
   // Escopo Público (Sem Guards de bloqueio)
   {
-    path: 'auth', // Mudar para 'auth/login' evita colisão de caminhos vazios
+    path: 'auth',
     component: Publico,
     children: [
       {
@@ -30,7 +31,6 @@ export const routes: Routes = [
     ],
   },
 
-  // Escopo Privado (100% Protegido pelo authGuard)
   {
     path: '',
     component: Privado,
@@ -45,12 +45,16 @@ export const routes: Routes = [
         component: AbrirChamado,
       },
       {
-        path: 'chamado/editar',
+        path: 'chamado/editar/:id',
         component: EditarChamado,
       },
       {
         path: 'chamado/meus',
         component: MeusChamados,
+      },
+      {
+        path: 'admin/configuracoes',
+        component: AdminConfig,
       },
     ],
   },
