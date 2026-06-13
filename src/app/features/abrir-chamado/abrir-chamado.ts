@@ -6,9 +6,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 
-// Importações dos nossos novos serviços e interfaces
+// Importações atualizadas dos serviços e da nossa nova interface
 import { ChamadosService } from '../../core/services/chamados';
-import { AuthService } from '../../core/services/auth';
+import { AuthService, UserPerfil } from '../../core/services/auth';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -26,7 +26,8 @@ import { Subscription } from 'rxjs';
   styleUrl: './abrir-chamado.scss',
 })
 export class AbrirChamado implements OnInit, OnDestroy {
-  @Input() role: 'admin' | 'aluno' = 'aluno';
+  // Ajustado o tipo padrão para bater com as opções do nosso banco ('admin' ou 'aluno')
+  @Input() role: 'admin' | 'aluno' | 'servidor' = 'aluno';
 
   private fb = inject(FormBuilder);
   private chamadosService = inject(ChamadosService);
@@ -54,6 +55,7 @@ export class AbrirChamado implements OnInit, OnDestroy {
     'Cantina',
     'Estacionameto',
   ];
+
   problemas = [
     'Elétrica',
     'Hidráulica',
@@ -64,13 +66,13 @@ export class AbrirChamado implements OnInit, OnDestroy {
     'Estrutural',
     'Outros',
   ];
-  servidores = ['João Silva', 'Maria Santos', 'Pedro Oliveira'];
 
   ngOnInit() {
-    // Captura o email do aluno/servidor que está logado no momento
-    this.userSub = this.authService.user$.subscribe((user) => {
-      if (user?.email) {
-        this.usuarioLogadoEmail = user.email;
+    // Agora escutamos o usuarioPerfil$ que resolve o problema do 'any' implicitamente
+    this.userSub = this.authService.usuarioPerfil$.subscribe((perfil: UserPerfil | null) => {
+      if (perfil) {
+        this.usuarioLogadoEmail = perfil.email;
+        this.role = perfil.role; // Alimenta a role da página direto com o valor real do banco!
       }
     });
   }
@@ -88,7 +90,7 @@ export class AbrirChamado implements OnInit, OnDestroy {
       baixa: 'Baixa',
       media: 'Média',
       alta: 'Alta',
-      critica: 'Alta', // Adaptado para caber na sua interface original
+      critica: 'Alta',
     };
 
     // Montando o idGrupo (ex: bloco_adm_sala_10_eletrica)
@@ -98,6 +100,7 @@ export class AbrirChamado implements OnInit, OnDestroy {
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/\s+/g, '_');
+
     const idGrupoGerado = `${stringTratada(formValues.lugar)}_${stringTratada(formValues.ambiente)}_${stringTratada(formValues.tipoProblema)}`;
 
     // Monta o objeto idêntico à estrutura exigida pelo seu Firebase

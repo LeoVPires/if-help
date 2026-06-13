@@ -6,13 +6,10 @@
 .sidebar {
   width: 280px;
   height: 100vh;
-
   display: flex;
   flex-direction: column;
-
   background: var(--mat-sys-surface);
   border-right: 1px solid var(--mat-sys-outline-variant);
-
   padding: 24px;
   box-sizing: border-box;
 }
@@ -21,105 +18,164 @@
   display: flex;
   align-items: center;
   gap: 16px;
-
   margin-bottom: 40px;
-}
 
-.logo-icon {
-  width: 52px;
-  height: 52px;
+  .logo-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--mat-sys-primary);
+    color: var(--mat-sys-on-primary);
+  }
 
-  border-radius: 12px;
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1;
+  }
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: var(--mat-sys-primary);
-  color: var(--mat-sys-on-primary);
-}
-
-.logo-section h2 {
-  margin: 0;
-  font-size: 24px;
-  line-height: 1;
-}
-
-.logo-section span {
-  color: var(--mat-sys-on-surface-variant);
+  span {
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 14px;
+  }
 }
 
 .menu {
   display: flex;
   flex-direction: column;
   gap: 8px;
-
   flex: 1;
+  overflow-y: auto; // Garante rolagem caso a tela seja muito baixa
 }
 
 .menu-item {
   height: 48px;
-
   display: flex;
   align-items: center;
   gap: 12px;
-
   padding: 0 16px;
-
   border-radius: 12px;
-
   text-decoration: none;
-
   color: var(--mat-sys-on-surface);
-
   transition: 0.2s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--mat-sys-primary) 10%, transparent);
+  }
+
+  &.active {
+    background: var(--mat-sys-primary);
+    color: var(--mat-sys-on-primary);
+    font-weight: 600;
+  }
 }
 
-.menu-item:hover {
-  background: color-mix(in srgb, var(--mat-sys-primary) 10%, transparent);
-}
-
-.menu-item.active {
-  background: var(--mat-sys-primary);
-  color: var(--mat-sys-on-primary);
-
-  font-weight: 600;
+// Rodapé fixado na base do Menu
+.footer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto; // Força empurrar tudo para baixo
+  padding-top: 16px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
 }
 
 .user-card {
   display: flex;
   align-items: center;
   gap: 12px;
-
-  padding: 16px;
-
+  padding: 12px;
   border-radius: 16px;
-
   background: var(--mat-sys-surface-container);
+  overflow: hidden; // Previne estouro de textos longos
 }
 
 .avatar {
   width: 44px;
   height: 44px;
-
+  min-width: 44px; // Não deforma se o texto do lado crescer
   border-radius: 50%;
-
-  background: var(--mat-sys-primary);
-  color: var(--mat-sys-on-primary);
-
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
   display: flex;
   align-items: center;
   justify-content: center;
-
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 16px;
 }
 
 .user-info {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+
+  .user-name {
+    font-size: 14px;
+    color: var(--mat-sys-on-surface);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-email {
+    font-size: 11px;
+    color: var(--mat-sys-on-surface-variant);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // Estilização das tags de Roles baseadas em cores semânticas
+  .role-badge {
+    align-self: flex-start;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+
+    &.admin {
+      background: color-mix(in srgb, var(--mat-sys-error) 15%, transparent);
+      color: var(--mat-sys-error);
+    }
+    &.servidor {
+      background: color-mix(in srgb, #e67e22 15%, transparent);
+      color: #d35400;
+    }
+    &.publico {
+      background: color-mix(in srgb, var(--mat-sys-primary) 15%, transparent);
+      color: var(--mat-sys-primary);
+    }
+  }
 }
 
-.user-info span {
-  font-size: 12px;
+// Botão de Logout elegante integrado ao design tokens do Angular Material
+.logout-btn {
+  width: 100%;
+  justify-content: flex-start !important;
+  color: var(--mat-sys-error) !important;
+  border-radius: 12px !important;
+  height: 40px;
+
+  mat-icon {
+    margin-right: 8px;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--mat-sys-error) 8%, transparent) !important;
+  }
+}
+
+.loading-menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
   color: var(--mat-sys-on-surface-variant);
+  font-size: 14px;
 }

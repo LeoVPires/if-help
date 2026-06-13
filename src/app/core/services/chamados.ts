@@ -14,23 +14,20 @@ import { Chamado } from '../modals/chamado';
   providedIn: 'root',
 })
 export class ChamadosService {
-  // Injeta o Firestore no serviço
   private firestore = inject(Firestore);
-
-  // Referência para a coleção "chamados"
-  private chamadosCollection = collection(this.firestore, 'chamados');
 
   // 1. BUSCAR todos os chamados
   getChamados(): Observable<Chamado[]> {
-    // o { idField: 'id' } faz com que o ID gerado pelo Firebase seja mapeado para a propriedade 'id' da interface
-    return collectionData(this.chamadosCollection, { idField: 'id' }) as Observable<Chamado[]>;
+    // Criar a referência aqui dentro garante o Injection Context correto!
+    const chamadosCollection = collection(this.firestore, 'chamados');
+    return collectionData(chamadosCollection, { idField: 'id' }) as Observable<Chamado[]>;
   }
 
   // 2. CRIAR um novo chamado
   async addChamado(chamado: Chamado): Promise<any> {
-    // Remove o id caso ele venha vazio para não salvar uma string vazia no banco
+    const chamadosCollection = collection(this.firestore, 'chamados');
     delete chamado.id;
-    return addDoc(this.chamadosCollection, chamado);
+    return addDoc(chamadosCollection, chamado);
   }
 
   // 3. ATUALIZAR um chamado (ex: mudar status)
@@ -41,7 +38,6 @@ export class ChamadosService {
 
   // 4. ADICIONAR NOTA (Subcoleção)
   async addNota(chamadoId: string, nota: any): Promise<any> {
-    // Aponta direto para a subcoleção "notas" dentro do documento do chamado específico
     const notasCollection = collection(this.firestore, `chamados/${chamadoId}/notas`);
     return addDoc(notasCollection, nota);
   }

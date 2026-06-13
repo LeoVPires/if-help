@@ -3,33 +3,45 @@
     <div class="logo-icon">
       <mat-icon>school</mat-icon>
     </div>
-
     <div>
       <h2>IF, Help!</h2>
       <span>Demandas</span>
     </div>
   </div>
 
-  <nav class="menu">
-    @for (item of items; track item.route) {
-      <a [routerLink]="item.route" routerLinkActive="active" class="menu-item">
-        <mat-icon fontSet="material-symbols-rounded">
-          {{ item.icon }}
-        </mat-icon>
+  @if (authService.usuarioPerfil$ | async; as perfil) {
+    <nav class="menu">
+      @for (item of filtrarItemsPorRole(perfil.role); track item.route) {
+        <a [routerLink]="item.route" routerLinkActive="active" class="menu-item">
+          <mat-icon fontSet="material-symbols-rounded">{{ item.icon }}</mat-icon>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
 
-        <span>
-          {{ item.label }}
-        </span>
-      </a>
-    }
-  </nav>
+    <div class="footer-section">
+      <div class="user-card">
+        <div class="avatar">
+          {{ getAvatarInitials(perfil.nome) }}
+        </div>
 
-  <div class="user-card">
-    <div class="avatar">AL</div>
+        <div class="user-info">
+          <span class="role-badge" [class]="perfil.role">
+            {{ getRoleLabel(perfil.role) }}
+          </span>
+          <strong class="user-name" [title]="perfil.nome">{{ perfil.nome }}</strong>
+          <span class="user-email" [title]="perfil.email">{{ perfil.email }}</span>
+        </div>
+      </div>
 
-    <div class="user-info">
-      <strong>Portal do Aluno</strong>
-      <span>aluno&#64;ifce.edu.br</span>
+      <button mat-button class="logout-btn" (click)="efetuarLogout()">
+        <mat-icon>logout</mat-icon>
+        Sair da Conta
+      </button>
     </div>
-  </div>
+  } @else {
+    <div class="loading-menu">
+      <span>Carregando dados...</span>
+    </div>
+  }
 </aside>

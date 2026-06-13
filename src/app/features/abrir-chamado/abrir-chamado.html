@@ -1,6 +1,5 @@
 <section class="page-header">
   <h2>Registrar Nova Demanda</h2>
-
   <p>Preencha os detalhes abaixo para reportar um problema no campus.</p>
 </section>
 
@@ -9,11 +8,10 @@
     <div class="grid">
       <mat-form-field appearance="outline">
         <mat-label>Bloco / Setor</mat-label>
-
         <mat-select formControlName="lugar">
-          @for (lugar of lugar; track lugar) {
-            <mat-option [value]="lugar">
-              {{ lugar }}
+          @for (item of lugar; track item) {
+            <mat-option [value]="item">
+              {{ item }}
             </mat-option>
           }
         </mat-select>
@@ -21,7 +19,6 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Sala / Ambiente</mat-label>
-
         <input
           matInput
           formControlName="ambiente"
@@ -32,7 +29,6 @@
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Tipo de Problema</mat-label>
-
       <mat-select formControlName="tipoProblema">
         @for (tipo of problemas; track tipo) {
           <mat-option [value]="tipo">
@@ -42,31 +38,22 @@
       </mat-select>
     </mat-form-field>
 
-    @if (role === 'admin') {
+    @if (role !== 'aluno') {
       <div class="grid">
         <mat-form-field appearance="outline">
           <mat-label>Prioridade</mat-label>
-
           <mat-select formControlName="prioridade">
             <mat-option value="baixa"> Baixa </mat-option>
-
             <mat-option value="media"> Média </mat-option>
-
             <mat-option value="alta"> Alta </mat-option>
-
             <mat-option value="critica"> Crítica </mat-option>
           </mat-select>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Responsável</mat-label>
-
+          <mat-label>Responsável pelo Serviço</mat-label>
           <mat-select formControlName="responsavelId">
-            @for (servidor of servidores; track servidor) {
-              <mat-option [value]="servidor">
-                {{ servidor }}
-              </mat-option>
-            }
+            <mat-option value="">Deixar sem atribuição inicial</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -74,17 +61,13 @@
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Descrição Detalhada</mat-label>
-
-      <textarea matInput rows="5" formControlName="descricao"> </textarea>
+      <textarea matInput rows="5" formControlName="descricao"></textarea>
     </mat-form-field>
 
     <div class="actions">
-      <button mat-button type="button">Cancelar</button>
-
-      <button mat-flat-button type="submit">
-        <mat-icon>send</mat-icon>
-
-        Enviar Chamado
+      <button mat-button type="button" (click)="form.reset()">Cancelar</button>
+      <button mat-flat-button type="submit" [disabled]="form.invalid">
+        <mat-icon>send</mat-icon> Enviar Chamado
       </button>
     </div>
   </form>

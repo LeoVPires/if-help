@@ -3,5 +3,5 @@ export interface Servidor {
   email: string;
   nome: string;
   funcao: string;
-  role: 'servidor' | 'admin';
+  role: 'aluno' | 'servidor' | 'admin';
 }

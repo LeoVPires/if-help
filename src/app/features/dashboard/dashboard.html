@@ -1,5 +1,13 @@
-@if (role === 'admin') {
-  <app-dashboard-admin [chamados]="chamados"> </app-dashboard-admin>
+@if (authService.usuarioPerfil$ | async; as perfil) {
+  @if (perfil.role === 'admin') {
+    <app-dashboard-admin [chamados]="chamados"></app-dashboard-admin>
+  } @else if (perfil.role === 'servidor') {
+    <app-dashboard-admin [chamados]="chamados"></app-dashboard-admin>
+  } @else {
+    <app-dashboard-public [chamados]="chamados"></app-dashboard-public>
+  }
 } @else {
-  <app-dashboard-public [chamados]="chamados"> </app-dashboard-public>
+  <div class="loading-container">
+    <p>Carregando informações do painel...</p>
+  </div>
 }
