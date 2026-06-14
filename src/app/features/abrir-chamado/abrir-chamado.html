@@ -8,10 +8,11 @@
     <div class="grid">
       <mat-form-field appearance="outline">
         <mat-label>Bloco / Setor</mat-label>
+
         <mat-select formControlName="lugar">
-          @for (item of lugar; track item) {
-            <mat-option [value]="item">
-              {{ item }}
+          @for (local of locais; track local.id) {
+            <mat-option [value]="local.nome">
+              {{ local.nome }}
             </mat-option>
           }
         </mat-select>
@@ -19,20 +20,24 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Sala / Ambiente</mat-label>
-        <input
-          matInput
-          formControlName="ambiente"
-          placeholder="Ex: Sala 10, banheiro masculino, corredor, etc..."
-        />
+
+        <mat-select formControlName="ambiente">
+          @for (ambiente of ambientes; track ambiente) {
+            <mat-option [value]="ambiente">
+              {{ ambiente }}
+            </mat-option>
+          }
+        </mat-select>
       </mat-form-field>
     </div>
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Tipo de Problema</mat-label>
+
       <mat-select formControlName="tipoProblema">
-        @for (tipo of problemas; track tipo) {
-          <mat-option [value]="tipo">
-            {{ tipo }}
+        @for (tipo of tiposDemanda; track tipo.id) {
+          <mat-option [value]="tipo.nome">
+            {{ tipo.nome }}
           </mat-option>
         }
       </mat-select>
@@ -42,18 +47,26 @@
       <div class="grid">
         <mat-form-field appearance="outline">
           <mat-label>Prioridade</mat-label>
+
           <mat-select formControlName="prioridade">
-            <mat-option value="baixa"> Baixa </mat-option>
-            <mat-option value="media"> Média </mat-option>
-            <mat-option value="alta"> Alta </mat-option>
-            <mat-option value="critica"> Crítica </mat-option>
+            <mat-option value="baixa">Baixa</mat-option>
+            <mat-option value="media">Média</mat-option>
+            <mat-option value="alta">Alta</mat-option>
+            <mat-option value="critica">Crítica</mat-option>
           </mat-select>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Responsável pelo Serviço</mat-label>
+
           <mat-select formControlName="responsavelId">
-            <mat-option value="">Deixar sem atribuição inicial</mat-option>
+            <mat-option value=""> Deixar sem atribuição inicial </mat-option>
+
+            @for (usuario of responsaveis; track usuario.uid) {
+              <mat-option [value]="usuario.uid">
+                {{ usuario.nome }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
       </div>
@@ -61,13 +74,16 @@
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Descrição Detalhada</mat-label>
-      <textarea matInput rows="5" formControlName="descricao"></textarea>
+
+      <textarea matInput rows="5" formControlName="descricao"> </textarea>
     </mat-form-field>
 
     <div class="actions">
       <button mat-button type="button" (click)="form.reset()">Cancelar</button>
+
       <button mat-flat-button type="submit" [disabled]="form.invalid">
-        <mat-icon>send</mat-icon> Enviar Chamado
+        <mat-icon>send</mat-icon>
+        Enviar Chamado
       </button>
     </div>
   </form>

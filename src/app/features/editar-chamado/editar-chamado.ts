@@ -119,7 +119,8 @@ export class EditarChamado implements OnInit {
       prioridade: 'Alta',
       criadoPor: 'ricardo.c@ifce.edu.br',
       criadoEm: '2026-05-29T09:15:00Z',
-      atribuidoPara: 'Técnico Carlos',
+      atribuidoPara: 'asdas5d1a65s1d56a1sdxasd',
+      atribuidoParaNome: 'Técnico Carlos',
       idGrupo: 'localCampus_a_ambienteLocal_102_infraestrutura',
     };
   }

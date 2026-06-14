@@ -41,8 +41,8 @@
     <mat-card
       appearance="outlined"
       class="stat-card"
-      [class.active]="activeStatusFilter === 'Concluído'"
-      (click)="toggleStatusFilter('Concluído')"
+      [class.active]="activeStatusFilter === 'Fechado'"
+      (click)="toggleStatusFilter('Fechado')"
     >
       <mat-card-subtitle>Resolvidos</mat-card-subtitle>
       <mat-card-title class="color-success">{{ countConcluido | number: '2.0' }}</mat-card-title>
@@ -56,7 +56,7 @@
         <td mat-cell *matCellDef="let element">
           <div class="cell-location">
             <mat-icon>location_on</mat-icon>
-            <span>{{ element.bloco }} - {{ element.sala }}</span>
+            <span>{{ element.localCampus }} - {{ element.localCampus }}</span>
           </div>
         </td>
       </ng-container>
@@ -65,7 +65,7 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo de Demanda</th>
         <td mat-cell *matCellDef="let element">
           <span class="demand-desc">{{ element.descricao }}</span>
-          <span class="demand-cat">{{ element.categoria }}</span>
+          <span class="demand-cat">{{ element.tipoDemanda }}</span>
         </td>
       </ng-container>
 

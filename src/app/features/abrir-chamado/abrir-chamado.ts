@@ -6,9 +6,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 
-// Importações atualizadas dos serviços e da nossa nova interface
 import { ChamadosService } from '../../core/services/chamados';
 import { AuthService, UserPerfil } from '../../core/services/auth';
+import { ConfigurarLocaisService } from '../../core/services/configurar-locais';
+
+import { LocalCampus, TipoDemanda, Chamado } from '../../core/modals/chamado';
+
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -26,15 +29,21 @@ import { Subscription } from 'rxjs';
   styleUrl: './abrir-chamado.scss',
 })
 export class AbrirChamado implements OnInit, OnDestroy {
-  // Ajustado o tipo padrão para bater com as opções do nosso banco ('admin' ou 'aluno')
   @Input() role: 'admin' | 'aluno' | 'servidor' = 'aluno';
 
   private fb = inject(FormBuilder);
   private chamadosService = inject(ChamadosService);
   private authService = inject(AuthService);
+  private configurarLocaisService = inject(ConfigurarLocaisService);
 
-  private userSub!: Subscription;
+  private subscriptions = new Subscription();
+
   usuarioLogadoEmail = '';
+
+  locais: LocalCampus[] = [];
+  ambientes: string[] = [];
+  tiposDemanda: TipoDemanda[] = [];
+  responsaveis: UserPerfil[] = [];
 
   form = this.fb.nonNullable.group({
     lugar: ['', Validators.required],
@@ -45,36 +54,47 @@ export class AbrirChamado implements OnInit, OnDestroy {
     responsavelId: [''],
   });
 
-  lugar = [
-    'Bloco Adm',
-    'Bloco 1',
-    'Bloco 2',
-    'Bloco 3',
-    'Quadra',
-    'Refeitório',
-    'Cantina',
-    'Estacionameto',
-  ];
+  ngOnInit(): void {
+    this.subscriptions.add(
+      this.authService.usuarioPerfil$.subscribe((perfil: UserPerfil | null) => {
+        if (!perfil) return;
 
-  problemas = [
-    'Elétrica',
-    'Hidráulica',
-    'Limpeza',
-    'TI',
-    'Internet',
-    'Ar Condicionado',
-    'Estrutural',
-    'Outros',
-  ];
-
-  ngOnInit() {
-    // Agora escutamos o usuarioPerfil$ que resolve o problema do 'any' implicitamente
-    this.userSub = this.authService.usuarioPerfil$.subscribe((perfil: UserPerfil | null) => {
-      if (perfil) {
         this.usuarioLogadoEmail = perfil.email;
-        this.role = perfil.role; // Alimenta a role da página direto com o valor real do banco!
-      }
-    });
+        this.role = perfil.role;
+      }),
+    );
+
+    this.subscriptions.add(
+      this.configurarLocaisService.getLocaisComAmbientes().subscribe((locais) => {
+        this.locais = locais;
+      }),
+    );
+
+    this.subscriptions.add(
+      this.configurarLocaisService.getTiposDemanda().subscribe((tipos) => {
+        this.tiposDemanda = tipos;
+      }),
+    );
+
+    this.subscriptions.add(
+      this.form.controls.lugar.valueChanges.subscribe((nomeLocal) => {
+        const localSelecionado = this.locais.find((local) => local.nome === nomeLocal);
+
+        this.ambientes = localSelecionado?.ambientes?.map((amb) => amb.nome) ?? [];
+
+        this.form.patchValue({
+          ambiente: '',
+        });
+      }),
+    );
+
+    this.subscriptions.add(
+      this.configurarLocaisService
+        .buscarUsuariosPorRoles(['admin', 'servidor'])
+        .subscribe((usuarios) => {
+          this.responsaveis = usuarios;
+        }),
+    );
   }
 
   async salvar() {
@@ -85,15 +105,13 @@ export class AbrirChamado implements OnInit, OnDestroy {
 
     const formValues = this.form.getRawValue();
 
-    // Mapeamento das prioridades do formulário para o padrão solicitado no JSON (Capitalizado)
-    const mapaPrioridades: Record<string, 'Baixa' | 'Média' | 'Alta'> = {
+    const mapaPrioridades: Record<string, 'Baixa' | 'Média' | 'Alta' | 'Crítica'> = {
       baixa: 'Baixa',
       media: 'Média',
       alta: 'Alta',
-      critica: 'Alta',
+      critica: 'Crítica',
     };
 
-    // Montando o idGrupo (ex: bloco_adm_sala_10_eletrica)
     const stringTratada = (txt: string) =>
       txt
         .toLowerCase()
@@ -101,41 +119,58 @@ export class AbrirChamado implements OnInit, OnDestroy {
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/\s+/g, '_');
 
-    const idGrupoGerado = `${stringTratada(formValues.lugar)}_${stringTratada(formValues.ambiente)}_${stringTratada(formValues.tipoProblema)}`;
+    const idGrupoGerado =
+      `${stringTratada(formValues.lugar)}_` +
+      `${stringTratada(formValues.ambiente)}_` +
+      `${stringTratada(formValues.tipoProblema)}`;
 
-    // Monta o objeto idêntico à estrutura exigida pelo seu Firebase
-    const novoChamado = {
+    const responsavelSelecionado = this.responsaveis.find(
+      (usuario) => usuario.uid === formValues.responsavelId,
+    );
+
+    const novoChamado: Chamado = {
       localCampus: formValues.lugar,
       ambienteLocal: formValues.ambiente,
       tipoDemanda: formValues.tipoProblema,
       descricao: formValues.descricao,
-      canalAbertura: 'formulario' as const,
-      status: 'Aberto' as const,
-      prioridade: mapaPrioridades[formValues.prioridade] || 'Média',
+
+      canalAbertura: 'formulario',
+      status: 'Aberto',
+
+      prioridade: mapaPrioridades[formValues.prioridade] ?? 'Média',
+
       criadoPor: this.usuarioLogadoEmail || 'usuario.desconhecido@ifce.edu.br',
+
       criadoEm: new Date().toISOString(),
+
       atribuidoPara: formValues.responsavelId || '',
+      atribuidoParaNome: responsavelSelecionado?.nome || '',
+
       idGrupo: idGrupoGerado,
     };
 
     try {
       await this.chamadosService.addChamado(novoChamado);
-      alert('Chamado registrado com sucesso no Firebase!');
+
+      alert('Chamado registrado com sucesso!');
+
       this.form.reset({
-        prioridade: 'media',
         lugar: '',
         ambiente: '',
         tipoProblema: '',
         descricao: '',
+        prioridade: 'media',
         responsavelId: '',
       });
+
+      this.ambientes = [];
     } catch (error) {
-      console.error('Erro ao salvar o chamado:', error);
-      alert('Houve um erro técnico ao tentar salvar o chamado.');
+      console.error('Erro ao salvar chamado:', error);
+      alert('Erro ao registrar chamado.');
     }
   }
 
-  ngOnDestroy() {
-    if (this.userSub) this.userSub.unsubscribe();
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 }

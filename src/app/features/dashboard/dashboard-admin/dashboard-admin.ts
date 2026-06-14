@@ -81,7 +81,7 @@ export class DashboardAdmin implements OnChanges, AfterViewInit {
   filtros: FilterState = { search: '', categoria: '', prioridade: '', cardFiltro: null };
 
   // Listas para os Selects
-  categoriasDisponiveis: string[] = ['Infraestrutura', 'TI', 'Limpeza', 'Administrativo'];
+  categoriasDisponiveis: string[] = [];
   prioridadesDisponiveis: string[] = ['Baixa', 'Média', 'Alta', 'Crítica'];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -90,6 +90,9 @@ export class DashboardAdmin implements OnChanges, AfterViewInit {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['chamados'] && this.chamados) {
       this.dataSource.data = this.chamados;
+
+      this.categoriasDisponiveis = [...new Set(this.chamados.map((c) => c.tipoDemanda))].sort();
+
       this.calcularContadores();
       this.configurarFiltroPersonalizado();
     }

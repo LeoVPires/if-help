@@ -88,9 +88,9 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Local e Sala</th>
         <td mat-cell *matCellDef="let element">
           <div class="cell-location">
-            <mat-icon>location_on</mat-icon> <span>{{ element.bloco }}</span>
+            <mat-icon>location_on</mat-icon> <span>{{ element.localCampus }}</span>
           </div>
-          <small class="text-muted">{{ element.sala }}</small>
+          <small class="text-muted">{{ element.ambienteLocal }}</small>
         </td>
       </ng-container>
 
@@ -99,7 +99,7 @@
         <td mat-cell *matCellDef="let element">
           <span class="demand-desc">{{ element.descricao }}</span>
           <div class="tags-area">
-            <span class="badge-tag">{{ element.categoria }}</span>
+            <span class="badge-tag">{{ element.tipoDemanda }}</span>
             <span class="badge-tag prioridade" [ngClass]="element.prioridade | lowercase">{{
               element.prioridade
             }}</span>

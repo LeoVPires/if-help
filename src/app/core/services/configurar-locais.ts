@@ -177,6 +177,29 @@ export class ConfigurarLocaisService {
     });
   }
 
+  buscarUsuariosPorRoles(roles: Array<'admin' | 'servidor' | 'aluno'>): Observable<UserPerfil[]> {
+    return new Observable((observer) => {
+      const ref = collection(this.firestore, 'usuarios');
+
+      const q = query(ref, where('role', 'in', roles), orderBy('nomeBusca'));
+
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          observer.next(
+            snapshot.docs.map((doc) => ({
+              uid: doc.id,
+              ...doc.data(),
+            })) as UserPerfil[],
+          );
+        },
+        (error) => observer.error(error),
+      );
+
+      return () => unsubscribe();
+    });
+  }
+
   alterarRoleUsuario(uid: string, novaRole: 'admin' | 'servidor' | 'aluno') {
     const userDoc = doc(this.firestore, `usuarios/${uid}`);
     return updateDoc(userDoc, { role: novaRole });
