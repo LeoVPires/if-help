@@ -11,16 +11,15 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
-// Importações dos seus Serviços e Modais
 import { ConfigurarLocaisService } from '../../core/services/configurar-locais';
-import { TipoDemanda, LocalCampus, AmbienteLocal } from '../../core/modals/chamado'; // Ajuste o caminho
-import { UserPerfil } from '../../core/services/auth'; // Ajuste o caminho
+import { TipoDemanda, LocalCampus, AmbienteLocal } from '../../core/modals/chamado';
+import { UserPerfil } from '../../core/services/auth';
 
-// Importações dos componentes de diálogo que você criou
-import { TipoDemandaDialog } from './dialogs/tipo-demanda-dialog'; // Ajuste o caminho
-import { LocalDialog } from './dialogs/local-dialog'; // Ajuste o caminho
-import { AmbienteDialog } from './dialogs/ambiente-dialog'; // Ajuste o caminho
+import { TipoDemandaDialog } from './dialogs/tipo-demanda-dialog';
+import { LocalDialog } from './dialogs/local-dialog';
+import { AmbienteDialog } from './dialogs/ambiente-dialog';
 
+//TODO: fazer os dialogs puxarem as informações quando for pra editar algo
 @Component({
   selector: 'app-admin-config',
   standalone: true,
@@ -79,7 +78,6 @@ export class AdminConfig implements OnInit {
     });
   }
 
-  // --- Retorna a lista vinda direta do Firebase (A busca já ocorre no servidor) ---
   get usuariosFiltrados() {
     return this.usuarios();
   }

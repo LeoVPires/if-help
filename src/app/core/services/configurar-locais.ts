@@ -147,16 +147,16 @@ export class ConfigurarLocaisService {
   buscarUsuariosPorNome(nome: string): Observable<UserPerfil[]> {
     return new Observable((observer) => {
       const ref = collection(this.firestore, 'usuarios');
-      let q = query(ref, orderBy('nome'));
+      let q = query(ref, orderBy('nomeBusca'));
 
       if (nome.trim()) {
-        const termoIncial = nome;
-        const termoFinal = nome + '\uf8ff';
+        const termo = nome.toLowerCase();
+
         q = query(
           ref,
-          orderBy('nome'),
-          where('nome', '>=', termoIncial),
-          where('nome', '<=', termoFinal),
+          orderBy('nomeBusca'),
+          where('nomeBusca', '>=', termo),
+          where('nomeBusca', '<=', termo + '\uf8ff'),
         );
       }
 

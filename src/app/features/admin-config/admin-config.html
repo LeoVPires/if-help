@@ -49,67 +49,73 @@
       </button>
     </div>
 
-    <mat-accordion class="locais-accordion" multi="false">
-      @for (local of locais(); track local.id) {
-        <mat-expansion-panel class="local-panel">
-          <mat-expansion-panel-header>
-            <mat-panel-title>
-              <mat-icon class="panel-icon">{{ local.icone }}</mat-icon>
-              <strong>{{ local.nome }}</strong>
-            </mat-panel-title>
-            <mat-panel-description>
-              {{ local.ambientes?.length ?? 0 }} ambiente(s)
-            </mat-panel-description>
-          </mat-expansion-panel-header>
+    <div class="locais">
+      <mat-accordion class="locais-accordion" multi="false">
+        @for (local of locais(); track local.id) {
+          <mat-expansion-panel class="local-panel">
+            <mat-expansion-panel-header class="expansion-header">
+              <mat-panel-title>
+                <mat-icon class="panel-icon">{{ local.icone }}</mat-icon>
+                <strong>{{ local.nome }}</strong>
+              </mat-panel-title>
+              <mat-panel-description>
+                {{ local.ambientes?.length ?? 0 }} ambiente(s)
+              </mat-panel-description>
+            </mat-expansion-panel-header>
 
-          <div class="local-actions-bar">
-            <button mat-button color="primary" (click)="editarLocal(local.id!, $event)">
-              <mat-icon>edit</mat-icon> Editar Local
-            </button>
-            <button mat-button color="warn" (click)="excluirLocal(local.id!, $event)">
-              <mat-icon>delete</mat-icon> Excluir Local
-            </button>
-          </div>
-
-          <mat-divider></mat-divider>
-
-          <div class="ambientes-container">
-            <div class="ambientes-header">
-              <h3>Ambientes Cadastrados</h3>
-              <button mat-button color="primary" (click)="abrirModalNovoAmbiente(local.id!)">
-                <mat-icon>add</mat-icon> Novo Ambiente
+            <div class="local-actions-bar">
+              <button mat-button color="primary" (click)="editarLocal(local.id!, $event)">
+                <mat-icon>edit</mat-icon> Editar Local
+              </button>
+              <button mat-button color="warn" (click)="excluirLocal(local.id!, $event)">
+                <mat-icon>delete</mat-icon> Excluir Local
               </button>
             </div>
 
-            <div class="ambientes-list">
-              @for (amb of local.ambientes ?? []; track amb.id) {
-                <div class="ambiente-item">
-                  <span class="ambiente-nome">{{ amb.nome }}</span>
-                  <div class="ambiente-actions">
-                    <button
-                      mat-icon-button
-                      color="primary"
-                      (click)="editarAmbiente(local.id!, amb)"
-                    >
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button
-                      mat-icon-button
-                      color="warn"
-                      (click)="excluirAmbiente(local.id!, amb.id!)"
-                    >
-                      <mat-icon>delete</mat-icon>
-                    </button>
+            <mat-divider></mat-divider>
+
+            <div class="ambientes-container">
+              <div class="ambientes-header">
+                <h3>Ambientes Cadastrados</h3>
+                <button mat-button color="primary" (click)="abrirModalNovoAmbiente(local.id!)">
+                  <mat-icon>add</mat-icon> Novo Ambiente
+                </button>
+              </div>
+
+              <div class="ambientes-list">
+                @for (amb of local.ambientes ?? []; track amb.id) {
+                  <div class="ambiente-item">
+                    <div class="ambiente-identidade">
+                      <mat-icon class="panel-icon">{{ amb.icone }}</mat-icon>
+                      <span class="ambiente-nome">{{ amb.nome }}</span>
+                    </div>
+
+                    <div class="ambiente-actions">
+                      <button
+                        mat-icon-button
+                        color="primary"
+                        (click)="editarAmbiente(local.id!, amb)"
+                      >
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button
+                        mat-icon-button
+                        color="warn"
+                        (click)="excluirAmbiente(local.id!, amb.id!)"
+                      >
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              } @empty {
-                <div class="empty-state-ambiente">Nenhum ambiente cadastrado neste local.</div>
-              }
+                } @empty {
+                  <div class="empty-state-ambiente">Nenhum ambiente cadastrado neste local.</div>
+                }
+              </div>
             </div>
-          </div>
-        </mat-expansion-panel>
-      }
-    </mat-accordion>
+          </mat-expansion-panel>
+        }
+      </mat-accordion>
+    </div>
   </section>
 
   <section class="config-section">

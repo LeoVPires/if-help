@@ -3,7 +3,6 @@
   max-width: 1000px;
   margin: 0 auto;
 
-  // SOLUÇÃO: Garante que se o conteúdo passar da tela, o navegador libere o scroll
   height: auto;
   min-height: 100vh;
 }
@@ -54,6 +53,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .list-item {
@@ -110,6 +111,118 @@
   }
 }
 
+.locais {
+  max-height: 375px;
+  overflow-y: auto;
+}
+.locais-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  // Tira as bordas feias padrão do material e usa um gap entre os painéis
+  ::ng-deep .mat-expansion-panel {
+    background: var(--mat-sys-surface);
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 12px !important; // Força arredondamento
+    box-shadow: none;
+
+    &:hover:not(.mat-expanded) {
+      border-color: var(--mat-sys-outline);
+    }
+  }
+
+  mat-panel-title {
+    min-width: 70%;
+    overflow: hidden;
+  }
+
+  .panel-icon {
+    margin-right: 12px;
+    color: var(--mat-sys-tertiary);
+  }
+
+  mat-panel-title strong {
+    color: var(--mat-sys-on-surface);
+    font-size: 16px;
+  }
+
+  mat-panel-description {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.local-actions-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.ambientes-container {
+  padding-top: 16px;
+
+  .ambientes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--mat-sys-on-surface-variant);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+  }
+}
+
+.ambientes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .ambiente-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: var(--mat-sys-surface-container-lowest);
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 8px;
+    transition: 0.2s ease;
+
+    &:hover {
+      background: var(--mat-sys-surface-container);
+    }
+
+    .ambiente-identidade {
+      display: flex;
+      align-items: center;
+    }
+    .ambiente-nome {
+      font-size: 14px;
+      color: var(--mat-sys-on-surface);
+    }
+  }
+}
+
+.empty-state-ambiente {
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--mat-sys-outline);
+  font-style: italic;
+  background: var(--mat-sys-surface-container-lowest);
+  border-radius: 8px;
+  border: 1px dashed var(--mat-sys-outline-variant);
+}
+
 // Estilos da Seção de Acessos
 .access-card {
   border-radius: 16px;
@@ -158,7 +271,6 @@
   .user-role {
     width: 220px;
 
-    // Força o form-field do material ficar mais compacto na listagem
     ::ng-deep .mat-mdc-text-field-wrapper {
       background-color: var(--mat-sys-surface) !important;
     }

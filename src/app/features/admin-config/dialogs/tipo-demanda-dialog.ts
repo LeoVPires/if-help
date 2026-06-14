@@ -4,8 +4,8 @@ import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select'; // IMPORTANTE
-import { MatIconModule } from '@angular/material/icon'; // IMPORTANTE para ver os ícones na lista
+import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-tipo-demanda-dialog',
@@ -26,7 +26,6 @@ export class TipoDemandaDialog {
   private fb = inject(FormBuilder);
   dialogRef = inject(MatDialogRef<TipoDemandaDialog>);
 
-  // Lista de ícones temáticos para o admin escolher sem precisar adivinhar nomes
   listaIcones = [
     { classe: 'computer', label: 'Tecnologia da Informação / TI' },
     { classe: 'build', label: 'Infraestrutura / Oficina' },
@@ -36,12 +35,13 @@ export class TipoDemandaDialog {
     { classe: 'chair', label: 'Mobiliário (Cadeiras, Mesas)' },
     { classe: 'ac_unit', label: 'Climatização / Ar-condicionado' },
     { classe: 'electric_bolt', label: 'Elétrica / Iluminação' },
+    { classe: 'wifi', label: 'Internet' },
   ];
 
   form = this.fb.nonNullable.group({
     nome: ['', Validators.required],
     descricao: ['', Validators.required],
-    icone: ['computer', Validators.required], // Valor padrão inicial condizente com a lista
+    icone: ['computer', Validators.required],
   });
 
   salvar() {

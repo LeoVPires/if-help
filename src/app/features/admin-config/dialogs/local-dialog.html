@@ -1,21 +1,42 @@
-<h2 mat-dialog-title>Novo Local</h2>
+<h2 mat-dialog-title>Cadastrar Novo Local/Campus</h2>
 
-<mat-dialog-content>
-  <mat-form-field appearance="outline">
-    <mat-label>Nome</mat-label>
+<form [formGroup]="form" (ngSubmit)="salvar()">
+  <mat-dialog-content class="mat-typography">
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>Nome do Local</mat-label>
+      <input
+        matInput
+        formControlName="nome"
+        placeholder="Ex: Bloco A, Bloco de Indústria, Ginásio..."
+      />
+    </mat-form-field>
 
-    <input matInput formControlName="nome" />
-  </mat-form-field>
+    <mat-form-field appearance="outline" class="w-100 mt-2">
+      <mat-label>Ícone do Local</mat-label>
+      <mat-select formControlName="icone">
+        <mat-select-trigger>
+          <div class="d-flex align-items-center gap-2">
+            <mat-icon>{{ form.get('icone')?.value }}</mat-icon>
+            <span>
+              {{ listaIcones.find((i) => i.classe === form.get('icone')?.value)?.label }}
+            </span>
+          </div>
+        </mat-select-trigger>
 
-  <mat-form-field appearance="outline">
-    <mat-label>Ícone</mat-label>
+        <mat-option *ngFor="let icone of listaIcones" [value]="icone.classe">
+          <div class="d-flex align-items-center gap-2">
+            <mat-icon>{{ icone.classe }}</mat-icon>
+            <span>{{ icone.label }}</span>
+          </div>
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </mat-dialog-content>
 
-    <input matInput formControlName="icone" />
-  </mat-form-field>
-</mat-dialog-content>
-
-<mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close>Cancelar</button>
-
-  <button mat-flat-button (click)="salvar()">Salvar</button>
-</mat-dialog-actions>
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancelar</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
+      Salvar
+    </button>
+  </mat-dialog-actions>
+</form>

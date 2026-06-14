@@ -37,6 +37,7 @@ export class AuthService {
             uid: firebaseUser.uid,
             email: firebaseUser.email || '',
             nome: firebaseUser.displayName || '',
+
             role: dbUser ? dbUser['role'] || 'aluno' : 'aluno',
           } as UserPerfil;
         }),
@@ -61,6 +62,7 @@ export class AuthService {
             uid: resultado.user.uid,
             email: resultado.user.email,
             nome: resultado.user.displayName,
+            nomeBusca: resultado.user.displayName?.toLowerCase() ?? '',
           },
           { merge: true },
         );
