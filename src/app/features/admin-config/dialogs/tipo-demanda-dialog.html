@@ -1,0 +1,39 @@
+<h2 mat-dialog-title>Novo Tipo de Demanda</h2>
+
+<form [formGroup]="form">
+  <mat-dialog-content>
+    <mat-form-field appearance="outline">
+      <mat-label>Nome da Categoria</mat-label>
+      <input matInput formControlName="nome" placeholder="Ex: Informática, Elétrica..." />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Descrição</mat-label>
+      <textarea
+        matInput
+        rows="3"
+        formControlName="descricao"
+        placeholder="Descreva brevemente o que engloba..."
+      ></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Ícone Representativo</mat-label>
+      <mat-select formControlName="icone">
+        @for (opcao of listaIcones; track opcao.classe) {
+          <mat-option [value]="opcao.classe">
+            <div class="option-icon-layout">
+              <mat-icon>{{ opcao.classe }}</mat-icon>
+              <span>{{ opcao.label }}</span>
+            </div>
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close type="button">Cancelar</button>
+    <button mat-flat-button (click)="salvar()" type="submit">Salvar</button>
+  </mat-dialog-actions>
+</form>

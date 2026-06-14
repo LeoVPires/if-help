@@ -26,8 +26,12 @@
             <span>{{ item.descricao }}</span>
           </div>
           <div class="item-actions">
-            <button mat-icon-button color="primary"><mat-icon>edit</mat-icon></button>
-            <button mat-icon-button color="warn"><mat-icon>delete</mat-icon></button>
+            <button mat-icon-button color="primary" (click)="editarTipoDemanda(item)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="excluirTipoDemanda(item.id!)">
+              <mat-icon>delete</mat-icon>
+            </button>
           </div>
         </div>
       }
@@ -54,15 +58,15 @@
               <strong>{{ local.nome }}</strong>
             </mat-panel-title>
             <mat-panel-description>
-              {{ local.ambientes.length }} ambiente(s)
+              {{ local.ambientes?.length ?? 0 }} ambiente(s)
             </mat-panel-description>
           </mat-expansion-panel-header>
 
           <div class="local-actions-bar">
-            <button mat-button color="primary" (click)="editarLocal(local.id, $event)">
+            <button mat-button color="primary" (click)="editarLocal(local.id!, $event)">
               <mat-icon>edit</mat-icon> Editar Local
             </button>
-            <button mat-button color="warn" (click)="excluirLocal(local.id, $event)">
+            <button mat-button color="warn" (click)="excluirLocal(local.id!, $event)">
               <mat-icon>delete</mat-icon> Excluir Local
             </button>
           </div>
@@ -72,20 +76,28 @@
           <div class="ambientes-container">
             <div class="ambientes-header">
               <h3>Ambientes Cadastrados</h3>
-              <button mat-button color="primary" (click)="abrirModalNovoAmbiente(local.id)">
+              <button mat-button color="primary" (click)="abrirModalNovoAmbiente(local.id!)">
                 <mat-icon>add</mat-icon> Novo Ambiente
               </button>
             </div>
 
             <div class="ambientes-list">
-              @for (amb of local.ambientes; track amb.id) {
+              @for (amb of local.ambientes ?? []; track amb.id) {
                 <div class="ambiente-item">
                   <span class="ambiente-nome">{{ amb.nome }}</span>
                   <div class="ambiente-actions">
-                    <button mat-icon-button color="primary" title="Editar">
+                    <button
+                      mat-icon-button
+                      color="primary"
+                      (click)="editarAmbiente(local.id!, amb)"
+                    >
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-icon-button color="warn" title="Excluir">
+                    <button
+                      mat-icon-button
+                      color="warn"
+                      (click)="excluirAmbiente(local.id!, amb.id!)"
+                    >
                       <mat-icon>delete</mat-icon>
                     </button>
                   </div>
@@ -121,7 +133,7 @@
         </mat-form-field>
 
         <div class="users-list">
-          @for (user of usuariosFiltrados; track user.id) {
+          @for (user of usuariosFiltrados; track user.uid) {
             <div class="user-row">
               <div class="user-info">
                 <strong>{{ user.nome }}</strong>
@@ -132,9 +144,9 @@
                 <mat-form-field appearance="outline" subscriptSizing="dynamic">
                   <mat-select
                     [value]="user.role"
-                    (selectionChange)="alterarRole(user.id, $event.value)"
+                    (selectionChange)="alterarRole(user.uid!, $event.value)"
                   >
-                    <mat-option value="publico">Público (Aluno)</mat-option>
+                    <mat-option value="aluno">Público (Aluno)</mat-option>
                     <mat-option value="servidor">Técnico/Servidor</mat-option>
                     <mat-option value="admin">Administrador</mat-option>
                   </mat-select>

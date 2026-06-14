@@ -105,9 +105,9 @@ export class AbrirChamado implements OnInit, OnDestroy {
 
     // Monta o objeto idêntico à estrutura exigida pelo seu Firebase
     const novoChamado = {
-      bloco: formValues.lugar,
-      sala: formValues.ambiente,
-      categoria: formValues.tipoProblema,
+      localCampus: formValues.lugar,
+      ambienteLocal: formValues.ambiente,
+      tipoDemanda: formValues.tipoProblema,
       descricao: formValues.descricao,
       canalAbertura: 'formulario' as const,
       status: 'Aberto' as const,

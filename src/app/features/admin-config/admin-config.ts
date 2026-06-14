@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, effect } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,12 +7,25 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+
+// Importações dos seus Serviços e Modais
+import { ConfigurarLocaisService } from '../../core/services/configurar-locais';
+import { TipoDemanda, LocalCampus, AmbienteLocal } from '../../core/modals/chamado'; // Ajuste o caminho
+import { UserPerfil } from '../../core/services/auth'; // Ajuste o caminho
+
+// Importações dos componentes de diálogo que você criou
+import { TipoDemandaDialog } from './dialogs/tipo-demanda-dialog'; // Ajuste o caminho
+import { LocalDialog } from './dialogs/local-dialog'; // Ajuste o caminho
+import { AmbienteDialog } from './dialogs/ambiente-dialog'; // Ajuste o caminho
 
 @Component({
   selector: 'app-admin-config',
   standalone: true,
   imports: [
+    CommonModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -21,107 +34,174 @@ import { FormsModule } from '@angular/forms';
     MatSelectModule,
     MatDividerModule,
     MatExpansionModule,
+    MatDialogModule,
     FormsModule,
   ],
   templateUrl: './admin-config.html',
   styleUrl: './admin-config.scss',
 })
-export class AdminConfig {
-  // --- Dados Mocados para Tipos de Demanda ---
-  tiposDemanda = signal([
-    {
-      id: 1,
-      icone: 'memory',
-      nome: 'Tecnologia da Informação (TI)',
-      descricao: 'Computadores, internet, projetores e software.',
-    },
-    {
-      id: 2,
-      icone: 'build',
-      nome: 'Infraestrutura e Manutenção',
-      descricao: 'Elétrica, hidráulica, ar-condicionado e civil.',
-    },
-    {
-      id: 3,
-      icone: 'cleaning_services',
-      nome: 'Limpeza e Conservação',
-      descricao: 'Higienização de ambientes, lixo e reposição (papel/sabão).',
-    },
-    {
-      id: 4,
-      icone: 'inventory_2',
-      nome: 'Materiais de Apoio',
-      descricao: 'Pincel, apagador, reagentes de laboratório.',
-    },
-  ]);
+export class AdminConfig implements OnInit {
+  private configService = inject(ConfigurarLocaisService);
+  private dialog = inject(MatDialog);
 
-  // --- Dados Mocados para Locais ---
-  locais = signal([
-    {
-      id: 1,
-      icone: 'domain',
-      nome: 'Bloco A (Administrativo)',
-      ambientes: [
-        { id: 101, nome: 'Sala 102 - Departamento Pessoal' },
-        { id: 102, nome: 'Sala 103 - Direção' },
-        { id: 103, nome: 'Banheiro Masculino (Térreo)' },
-      ],
-    },
-    {
-      id: 2,
-      icone: 'school',
-      nome: 'Bloco B (Acadêmico)',
-      ambientes: [
-        { id: 201, nome: 'Laboratório de Informática 01' },
-        { id: 202, nome: 'Laboratório de Química' },
-        { id: 203, nome: 'Sala de Aula 05' },
-      ],
-    },
-    {
-      id: 3,
-      icone: 'restaurant',
-      nome: 'Refeitório & Vivência',
-      ambientes: [], // Exemplo de local sem ambientes ainda
-    },
-  ]);
+  // --- Sinais Reativos (Substituindo os dados mocados) ---
+  tiposDemanda = signal<TipoDemanda[]>([]);
+  locais = signal<LocalCampus[]>([]);
+  usuarios = signal<UserPerfil[]>([]);
+  termoBusca = signal<string>('');
 
-  // --- Dados Mocados para Controle de Acessos ---
-  termoBusca = signal('');
-  usuarios = signal([
-    { id: 'u1', nome: 'João Silva', email: 'joao.tecnico@ifce.edu.br', role: 'servidor' },
-    { id: 'u2', nome: 'Maria Souza', email: 'maria.admin@ifce.edu.br', role: 'admin' },
-    { id: 'u3', nome: 'Carlos Aluno', email: 'carlos@aluno.ifce.edu.br', role: 'publico' },
-  ]);
+  constructor() {
+    // Efeito para disparar a busca de usuários no Firebase sempre que o termo digitado mudar
+    effect(() => {
+      const termo = this.termoBusca();
+      this.configService.buscarUsuariosPorNome(termo).subscribe({
+        next: (lista) => this.usuarios.set(lista),
+        error: (err) => console.error('Erro ao buscar usuários:', err),
+      });
+    });
+  }
 
-  // Filtro simples para a barra de busca
+  ngOnInit(): void {
+    this.carregarDadosIniciais();
+  }
+
+  private carregarDadosIniciais() {
+    // Carrega tipos de demanda em tempo real
+    this.configService.getTiposDemanda().subscribe({
+      next: (dados) => this.tiposDemanda.set(dados),
+      error: (err) => console.error('Erro ao carregar demandas:', err),
+    });
+
+    // Carrega locais com seus respectivos ambientes aninhados
+    this.configService.getLocaisComAmbientes().subscribe({
+      next: (dados) => this.locais.set(dados),
+      error: (err) => console.error('Erro ao carregar locais:', err),
+    });
+  }
+
+  // --- Retorna a lista vinda direta do Firebase (A busca já ocorre no servidor) ---
   get usuariosFiltrados() {
-    const termo = this.termoBusca().toLowerCase();
-    return this.usuarios().filter(
-      (u) => u.nome.toLowerCase().includes(termo) || u.email.toLowerCase().includes(termo),
-    );
+    return this.usuarios();
   }
 
-  alterarRole(usuarioId: string, novaRole: string) {
-    console.log(`Role do usuário ${usuarioId} alterada para: ${novaRole}`);
-    // Futuro: Lógica de updateDoc no Firestore aqui
+  // ==========================================
+  // LÓGICA DE CONTROLE DE ACESSOS (ROLES)
+  // ==========================================
+  alterarRole(usuarioId: string, novaRole: 'admin' | 'servidor' | 'aluno') {
+    this.configService
+      .alterarRoleUsuario(usuarioId, novaRole)
+      .then(() => {
+        console.log(`Role do usuário ${usuarioId} atualizada com sucesso para ${novaRole}!`);
+      })
+      .catch((err) => console.error('Erro ao alterar nível de acesso:', err));
   }
 
-  // Ações de botões
-  abrirModalNovo(tipo: string) {
-    console.log(`Abrir modal para novo: ${tipo}`);
+  // ==========================================
+  // OPERAÇÕES DE DIÁLOGOS (CRUD)
+  // ==========================================
+
+  abrirModalNovo(tipo: 'demanda' | 'local') {
+    if (tipo === 'demanda') {
+      const dialogRef = this.dialog.open(TipoDemandaDialog, { width: '450px' });
+      dialogRef.afterClosed().subscribe((resultado: TipoDemanda) => {
+        if (resultado) {
+          this.configService
+            .addTipoDemanda(resultado)
+            .catch((err) => console.error('Erro ao adicionar demanda:', err));
+        }
+      });
+    } else if (tipo === 'local') {
+      const dialogRef = this.dialog.open(LocalDialog, { width: '400px' });
+      dialogRef.afterClosed().subscribe((resultado: LocalCampus) => {
+        if (resultado) {
+          this.configService
+            .addLocal(resultado)
+            .catch((err) => console.error('Erro ao adicionar local:', err));
+        }
+      });
+    }
   }
 
-  abrirModalNovoAmbiente(localId: number) {
-    console.log(`Abrir modal para novo ambiente no local ID: ${localId}`);
+  // Métodos adicionais para complementar o CRUD das Demandas
+  editarTipoDemanda(demanda: TipoDemanda) {
+    const dialogRef = this.dialog.open(TipoDemandaDialog, { width: '450px', data: demanda });
+    // Dica: Para preencher o form de edição, use o MAT_DIALOG_DATA dentro do seu TipoDemandaDialog
+    dialogRef.afterClosed().subscribe((resultado: Partial<TipoDemanda>) => {
+      if (resultado && demanda.id) {
+        this.configService
+          .updateTipoDemanda(demanda.id, resultado)
+          .catch((err) => console.error('Erro ao atualizar demanda:', err));
+      }
+    });
   }
 
-  editarLocal(localId: number, event: Event) {
-    event.stopPropagation(); // Evita que o painel abra/feche ao clicar no botão de editar
-    console.log(`Editar local ID: ${localId}`);
+  excluirTipoDemanda(id: string) {
+    if (confirm('Deseja realmente excluir este Tipo de Demanda?')) {
+      this.configService
+        .deleteTipoDemanda(id)
+        .catch((err) => console.error('Erro ao remover demanda:', err));
+    }
   }
 
-  excluirLocal(localId: number, event: Event) {
+  // ==========================================
+  // GERENCIAMENTO DE LOCAIS E AMBIENTES
+  // ==========================================
+  abrirModalNovoAmbiente(localId: string) {
+    const dialogRef = this.dialog.open(AmbienteDialog, { width: '400px' });
+    dialogRef.afterClosed().subscribe((resultado: AmbienteLocal) => {
+      if (resultado) {
+        this.configService
+          .addAmbiente(localId, resultado)
+          .catch((err) => console.error('Erro ao adicionar ambiente:', err));
+      }
+    });
+  }
+
+  editarLocal(localId: string, event: Event) {
     event.stopPropagation();
-    console.log(`Excluir local ID: ${localId}`);
+    // Localiza os dados atuais para enviar ao modal se necessário
+    const localAtual = this.locais().find((l) => l.id === localId);
+    const dialogRef = this.dialog.open(LocalDialog, { width: '400px', data: localAtual });
+
+    dialogRef.afterClosed().subscribe((resultado: Partial<LocalCampus>) => {
+      if (resultado) {
+        this.configService
+          .updateLocal(localId, resultado)
+          .catch((err) => console.error('Erro ao atualizar local:', err));
+      }
+    });
+  }
+
+  excluirLocal(localId: string, event: Event) {
+    event.stopPropagation();
+    if (
+      confirm(
+        'Aviso: Remover este local irá apagar todos os ambientes vinculados a ele. Continuar?',
+      )
+    ) {
+      this.configService
+        .deleteLocal(localId)
+        .catch((err) => console.error('Erro ao excluir local:', err));
+    }
+  }
+
+  editarAmbiente(localId: string, ambiente: AmbienteLocal) {
+    if (!ambiente.id) return;
+    const dialogRef = this.dialog.open(AmbienteDialog, { width: '400px', data: ambiente });
+    dialogRef.afterClosed().subscribe((resultado: Partial<AmbienteLocal>) => {
+      if (resultado && ambiente.id) {
+        this.configService
+          .updateAmbiente(localId, ambiente.id, resultado)
+          .catch((err) => console.error('Erro ao editar ambiente:', err));
+      }
+    });
+  }
+
+  excluirAmbiente(localId: string, ambienteId: string) {
+    if (confirm('Deseja realmente remover este ambiente?')) {
+      this.configService
+        .deleteAmbiente(localId, ambienteId)
+        .catch((err) => console.error('Erro ao excluir ambiente:', err));
+    }
   }
 }

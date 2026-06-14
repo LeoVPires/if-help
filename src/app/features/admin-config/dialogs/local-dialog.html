@@ -1,0 +1,21 @@
+<h2 mat-dialog-title>Novo Local</h2>
+
+<mat-dialog-content>
+  <mat-form-field appearance="outline">
+    <mat-label>Nome</mat-label>
+
+    <input matInput formControlName="nome" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Ícone</mat-label>
+
+    <input matInput formControlName="icone" />
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancelar</button>
+
+  <button mat-flat-button (click)="salvar()">Salvar</button>
+</mat-dialog-actions>

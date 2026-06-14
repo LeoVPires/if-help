@@ -1,3 +1,4 @@
+import { TipoDemanda } from './../../../core/modals/chamado';
 import {
   Component,
   Input,
@@ -127,11 +128,11 @@ export class DashboardAdmin implements OnChanges, AfterViewInit {
 
       if (f.search) {
         const textToSearch =
-          `${data.id} ${data.bloco} ${data.sala} ${data.descricao}`.toLowerCase();
+          `${data.id} ${data.localCampus} ${data.ambienteLocal} ${data.descricao}`.toLowerCase();
         if (!textToSearch.includes(f.search.toLowerCase())) match = false;
       }
 
-      if (f.categoria && data.categoria !== f.categoria) match = false;
+      if (f.categoria && data.tipoDemanda !== f.categoria) match = false;
       if (f.prioridade && data.prioridade !== f.prioridade) match = false;
 
       if (f.cardFiltro === 'alta' && data.prioridade !== 'Alta' && data.prioridade !== 'Crítica')
@@ -203,7 +204,7 @@ export class DashboardAdmin implements OnChanges, AfterViewInit {
     <mat-dialog-content>
       <p style="margin-bottom: 16px;">
         Foram encontrados outros chamados abertos neste mesmo local para a categoria
-        <strong>{{ data.chamadoBase.categoria }}</strong
+        <strong>{{ data.chamadoBase.tipoDemanda }}</strong
         >.
       </p>
 

@@ -90,10 +90,10 @@ export class DashboardPublic implements OnChanges, AfterViewInit {
   }
 
   private setupCustomFilter() {
-    // Ensina o Material Table a buscar em campos combinados (ex: bloco + sala)
+    // Ensina o Material Table a buscar em campos combinados (ex: localCampus + sala)
     this.dataSource.filterPredicate = (data: Chamado, filter: string) => {
       const dataStr =
-        `${data.bloco} ${data.sala} ${data.categoria} ${data.descricao} ${data.status}`.toLowerCase();
+        `${data.localCampus} ${data.ambienteLocal} ${data.tipoDemanda} ${data.descricao} ${data.status}`.toLowerCase();
       return dataStr.includes(filter);
     };
   }

@@ -109,26 +109,29 @@ export class EditarChamado implements OnInit {
     // Mockando um retorno:
     this.chamadoAtual = {
       id: this.chamadoId,
-      bloco: 'Bloco A',
-      sala: 'Sala 102',
-      categoria: 'Infraestrutura / Elétrica',
+      localCampus: 'Bloco A',
+      ambienteLocal: 'Sala 102',
+      tipoDemanda: 'Infraestrutura / Elétrica',
       descricao:
-        'O ar-condicionado central da sala 102 não está gelando corretamente. Começou a apresentar um ruído estranho e parou de resfriar por volta das 08:30. A sala está sendo usada para aula prática e o calor está excessivo.',
+        'O ar-condicionado central da ambienteLocal 102 não está gelando corretamente. Começou a apresentar um ruído estranho e parou de resfriar por volta das 08:30. A ambienteLocal está sendo usada para aula prática e o calor está excessivo.',
       canalAbertura: 'qrcode',
       status: 'Em Execução',
       prioridade: 'Alta',
       criadoPor: 'ricardo.c@ifce.edu.br',
       criadoEm: '2026-05-29T09:15:00Z',
       atribuidoPara: 'Técnico Carlos',
-      idGrupo: 'bloco_a_sala_102_infraestrutura',
+      idGrupo: 'localCampus_a_ambienteLocal_102_infraestrutura',
     };
   }
 
   inicializarFormulario() {
     this.chamadoForm = this.fb.group({
-      bloco: [{ value: this.chamadoAtual.bloco, disabled: true }, Validators.required],
-      sala: [{ value: this.chamadoAtual.sala, disabled: true }, Validators.required],
-      categoria: [{ value: this.chamadoAtual.categoria, disabled: true }, Validators.required],
+      localCampus: [{ value: this.chamadoAtual.localCampus, disabled: true }, Validators.required],
+      ambienteLocal: [
+        { value: this.chamadoAtual.ambienteLocal, disabled: true },
+        Validators.required,
+      ],
+      tipoDemanda: [{ value: this.chamadoAtual.tipoDemanda, disabled: true }, Validators.required],
       prioridade: [{ value: this.chamadoAtual.prioridade, disabled: true }, Validators.required],
       status: [{ value: this.chamadoAtual.status, disabled: true }, Validators.required],
       descricao: [{ value: this.chamadoAtual.descricao, disabled: true }, Validators.required],
@@ -143,8 +146,8 @@ export class EditarChamado implements OnInit {
       // Habilita apenas os campos que o admin pode alterar na edição comum
       this.chamadoForm.get('status')?.enable();
       this.chamadoForm.get('prioridade')?.enable();
-      this.chamadoForm.get('bloco')?.enable();
-      this.chamadoForm.get('sala')?.enable();
+      this.chamadoForm.get('localCampus')?.enable();
+      this.chamadoForm.get('ambienteLocal')?.enable();
 
       // Torna a nota obrigatória para justificar a edição
       this.chamadoForm.get('novaNota')?.setValidators([Validators.required]);
@@ -157,9 +160,9 @@ export class EditarChamado implements OnInit {
   cancelarEdicao() {
     this.isEditing = false;
     this.chamadoForm.reset({
-      bloco: this.chamadoAtual.bloco,
-      sala: this.chamadoAtual.sala,
-      categoria: this.chamadoAtual.categoria,
+      localCampus: this.chamadoAtual.localCampus,
+      ambienteLocal: this.chamadoAtual.ambienteLocal,
+      tipoDemanda: this.chamadoAtual.tipoDemanda,
       prioridade: this.chamadoAtual.prioridade,
       status: this.chamadoAtual.status,
       descricao: this.chamadoAtual.descricao,

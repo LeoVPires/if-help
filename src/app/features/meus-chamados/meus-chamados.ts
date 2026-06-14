@@ -112,7 +112,7 @@ export class MeusChamados implements OnChanges, AfterViewInit {
 
       if (f.search) {
         const textToSearch =
-          `${data.id} ${data.bloco} ${data.sala} ${data.descricao}`.toLowerCase();
+          `${data.id} ${data.localCampus} ${data.ambienteLocal} ${data.descricao}`.toLowerCase();
         if (!textToSearch.includes(f.search.toLowerCase())) match = false;
       }
 
