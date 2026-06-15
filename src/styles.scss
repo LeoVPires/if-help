@@ -20,7 +20,10 @@ html {
 
   @include mat.system-level-colors($light-theme);
   @include mat.system-level-typography($light-theme);
+}
 
-  // max-height: 100vh;
-  // overflow: hidden;
+html,
+body {
+  margin: 0;
+  padding: 0;
 }

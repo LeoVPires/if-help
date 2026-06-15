@@ -34,5 +34,14 @@ export interface Chamado {
   criadoPor: string;
   criadoEm: string;
   atribuidoPara: string;
+  atribuidoParaNome: string;
   idGrupo: string;
+}
+
+export interface Nota {
+  id?: string;
+  autorNome: string;
+  autorFuncao: string;
+  texto: string;
+  criadoEm: string;
 }

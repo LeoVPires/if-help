@@ -115,6 +115,7 @@ export class AbrirChamado implements OnInit, OnDestroy {
       criadoPor: this.usuarioLogadoEmail || 'usuario.desconhecido@ifce.edu.br',
       criadoEm: new Date().toISOString(),
       atribuidoPara: formValues.responsavelId || '',
+      atribuidoParaNome: '',
       idGrupo: idGrupoGerado,
     };
 

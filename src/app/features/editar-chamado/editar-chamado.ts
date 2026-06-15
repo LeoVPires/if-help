@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 // Angular Material
 import { MatCardModule } from '@angular/material/card';
@@ -12,22 +13,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-import { Chamado, StatusChamado, PrioridadeChamado } from '../../core/modals/chamado';
-
-interface NotaInterna {
-  id: string;
-  autor: string;
-  texto: string;
-  criadoEm: string;
-}
-
-interface HistoricoAtividade {
-  id: string;
-  titulo: string;
-  descricao: string;
-  tempo: string;
-  classe: string;
-}
+import { Chamado, StatusChamado, PrioridadeChamado, Nota } from '../../core/modals/chamado';
+import { ChamadosService, Usuario } from '../../core/services/chamados';
+import { AuthService } from '../../core/services/auth';
 
 @Component({
   selector: 'app-editar-chamado',
@@ -47,182 +35,320 @@ interface HistoricoAtividade {
   templateUrl: './editar-chamado.html',
   styleUrl: './editar-chamado.scss',
 })
-export class EditarChamado implements OnInit {
+export class EditarChamado implements OnInit, OnDestroy {
   chamadoId!: string;
   chamadoForm!: FormGroup;
   isEditing = false;
+  isLoading = true;
 
-  // Mock de dados internos que seriam carregados do seu Firebase Service
-  chamadoAtual!: Chamado;
-  notasInternas: NotaInterna[] = [
-    {
-      id: '1',
-      autor: 'Técnico Carlos',
-      texto:
-        'Necessário verificar se o gás do ar-condicionado precisa de reposição ou se é um problema no capacitor.',
-      criadoEm: '10:45',
-    },
-  ];
+  chamadoAtual?: Chamado;
+  notasInternas: Nota[] = [];
+  listaTecnicos: Usuario[] = [];
 
-  historico: HistoricoAtividade[] = [
-    {
-      id: '1',
-      titulo: 'Status alterado para Execução',
-      descricao: 'Técnico Carlos iniciou a verificação do compressor.',
-      tempo: 'Há 2 horas',
-      classe: 'status-change',
-    },
-    {
-      id: '2',
-      titulo: 'Prioridade alterada para Alta',
-      descricao: 'Ajustado por Admin devido a aula em laboratório.',
-      tempo: 'Há 3 horas',
-      classe: 'priority-change',
-    },
-    {
-      id: '3',
-      titulo: 'Chamado aberto',
-      descricao: 'Solicitação via QR Code da Sala 102.',
-      tempo: 'Hoje, 09:15',
-      classe: 'creation',
-    },
-  ];
+  // 🚀 Objeto de backup caso a sessão demore um milissegundo a mais para responder
+  usuarioLogado = {
+    nome: 'Usuário do Sistema',
+    funcao: 'Técnico',
+  };
 
-  statusOpcoes: StatusChamado[] = ['Aberto', 'Em Execução', 'Fechado'];
+  statusOpcoes: StatusChamado[] = ['Aberto', 'Em Execução', 'Fechado', 'Cancelado'];
   prioridadeOpcoes: PrioridadeChamado[] = ['Baixa', 'Média', 'Alta', 'Crítica'];
+
+  private subChamado?: Subscription;
+  private subNotas?: Subscription;
+  private subUsuarios?: Subscription;
+  private subPerfil?: Subscription; // 👈 Assinatura para o perfil logado
 
   constructor(
     private route: ActivatedRoute,
     private fb: FormBuilder,
     private location: Location,
     private snackBar: MatSnackBar,
-  ) {}
+    private chamadosService: ChamadosService,
+    private authService: AuthService, // 👈 Injetado o seu AuthService
+    private cdr: ChangeDetectorRef,
+  ) {
+    this.inicializarFormularioVazio();
+  }
 
   ngOnInit() {
-    this.chamadoId = this.route.snapshot.paramMap.get('id') || '';
-    this.carregarChamado();
-    this.inicializarFormulario();
+    // 1. Escuta quem é o usuário logado no sistema
+    this.subPerfil = this.authService.usuarioPerfil$.subscribe({
+      next: (perfil) => {
+        if (perfil) {
+          this.usuarioLogado.nome = perfil.nome;
+          // Mapeia a role para um formato mais amigável na exibição se preferir (ex: 'admin' -> 'Administrador')
+          this.usuarioLogado.funcao = perfil.role === 'admin' ? 'Administrador' : 'Servidor';
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => console.error('Erro ao ler perfil do usuário:', err),
+    });
+
+    // 2. Escuta mudanças na rota para carregar os dados
+    this.route.paramMap.subscribe((params) => {
+      this.chamadoId = params.get('id') || '';
+
+      this.subChamado?.unsubscribe();
+      this.subNotas?.unsubscribe();
+      this.subUsuarios?.unsubscribe();
+
+      if (this.chamadoId) {
+        this.escutarDadosDoFirebase();
+      }
+    });
   }
 
-  carregarChamado() {
-    // Aqui você chamaria seu ChamadosService usando o id
-    // Mockando um retorno:
-    this.chamadoAtual = {
-      id: this.chamadoId,
-      localCampus: 'Bloco A',
-      ambienteLocal: 'Sala 102',
-      tipoDemanda: 'Infraestrutura / Elétrica',
-      descricao:
-        'O ar-condicionado central da ambienteLocal 102 não está gelando corretamente. Começou a apresentar um ruído estranho e parou de resfriar por volta das 08:30. A ambienteLocal está sendo usada para aula prática e o calor está excessivo.',
-      canalAbertura: 'qrcode',
-      status: 'Em Execução',
-      prioridade: 'Alta',
-      criadoPor: 'ricardo.c@ifce.edu.br',
-      criadoEm: '2026-05-29T09:15:00Z',
-      atribuidoPara: 'Técnico Carlos',
-      idGrupo: 'localCampus_a_ambienteLocal_102_infraestrutura',
-    };
+  ngOnDestroy() {
+    this.subChamado?.unsubscribe();
+    this.subNotas?.unsubscribe();
+    this.subUsuarios?.unsubscribe();
+    this.subPerfil?.unsubscribe(); // 👈 Cancela a assinatura ao sair da página
   }
 
-  inicializarFormulario() {
+  get statusControl() {
+    return this.chamadoForm.get('status');
+  }
+  get prioridadeControl() {
+    return this.chamadoForm.get('prioridade');
+  }
+  get atribuidoParaControl() {
+    return this.chamadoForm.get('atribuidoPara');
+  }
+
+  private inicializarFormularioVazio() {
     this.chamadoForm = this.fb.group({
-      localCampus: [{ value: this.chamadoAtual.localCampus, disabled: true }, Validators.required],
-      ambienteLocal: [
-        { value: this.chamadoAtual.ambienteLocal, disabled: true },
-        Validators.required,
-      ],
-      tipoDemanda: [{ value: this.chamadoAtual.tipoDemanda, disabled: true }, Validators.required],
-      prioridade: [{ value: this.chamadoAtual.prioridade, disabled: true }, Validators.required],
-      status: [{ value: this.chamadoAtual.status, disabled: true }, Validators.required],
-      descricao: [{ value: this.chamadoAtual.descricao, disabled: true }, Validators.required],
-      novaNota: [''], // Campo de anotação
+      localCampus: [{ value: '', disabled: true }, Validators.required],
+      ambienteLocal: [{ value: '', disabled: true }, Validators.required],
+      tipoDemanda: [{ value: '', disabled: true }, Validators.required],
+      prioridade: [{ value: '', disabled: true }, Validators.required],
+      status: [{ value: '', disabled: true }, Validators.required],
+      atribuidoPara: [{ value: '', disabled: true }],
+      descricao: [{ value: '', disabled: true }, Validators.required],
+      novaNota: [''],
+    });
+  }
+
+  private escutarDadosDoFirebase() {
+    this.isLoading = true;
+    this.cdr.detectChanges();
+
+    this.subChamado = this.chamadosService.getChamadoById(this.chamadoId).subscribe({
+      next: (chamado) => {
+        this.chamadoAtual = chamado;
+        this.atualizarValoresFormulario(chamado);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error(err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+        this.snackBar.open('Erro ou chamado não encontrado.', 'OK', { duration: 3000 });
+      },
+    });
+
+    this.subNotas = this.chamadosService.getNotasChamado(this.chamadoId).subscribe({
+      next: (notas) => {
+        this.notasInternas = notas;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Erro ao escutar notas:', err),
+    });
+
+    this.subUsuarios = this.chamadosService.getUsuarios().subscribe({
+      next: (usuarios) => {
+        this.listaTecnicos = usuarios.filter((u) => u.role === 'admin' || u.role === 'servidor');
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Erro ao carregar técnicos:', err),
+    });
+  }
+
+  private atualizarValoresFormulario(chamado: Chamado) {
+    this.chamadoForm.patchValue({
+      localCampus: chamado.localCampus,
+      ambienteLocal: chamado.ambienteLocal,
+      tipoDemanda: chamado.tipoDemanda,
+      prioridade: chamado.prioridade,
+      status: chamado.status,
+      atribuidoPara: chamado.atribuidoPara || '',
+      descricao: chamado.descricao,
     });
   }
 
   toggleEdit() {
+    if (!this.chamadoAtual) return;
     this.isEditing = !this.isEditing;
 
     if (this.isEditing) {
-      // Habilita apenas os campos que o admin pode alterar na edição comum
       this.chamadoForm.get('status')?.enable();
       this.chamadoForm.get('prioridade')?.enable();
       this.chamadoForm.get('localCampus')?.enable();
       this.chamadoForm.get('ambienteLocal')?.enable();
-
-      // Torna a nota obrigatória para justificar a edição
-      this.chamadoForm.get('novaNota')?.setValidators([Validators.required]);
+      this.chamadoForm.get('atribuidoPara')?.enable();
+      this.chamadoForm.get('novaNota')?.clearValidators();
     } else {
       this.cancelarEdicao();
     }
     this.chamadoForm.get('novaNota')?.updateValueAndValidity();
+    this.cdr.detectChanges();
   }
 
   cancelarEdicao() {
     this.isEditing = false;
-    this.chamadoForm.reset({
-      localCampus: this.chamadoAtual.localCampus,
-      ambienteLocal: this.chamadoAtual.ambienteLocal,
-      tipoDemanda: this.chamadoAtual.tipoDemanda,
-      prioridade: this.chamadoAtual.prioridade,
-      status: this.chamadoAtual.status,
-      descricao: this.chamadoAtual.descricao,
-      novaNota: '',
-    });
-    this.chamadoForm.disable();
+    if (this.chamadoAtual) {
+      this.atualizarValoresFormulario(this.chamadoAtual);
+    }
+    this.chamadoForm.get('status')?.disable();
+    this.chamadoForm.get('prioridade')?.disable();
+    this.chamadoForm.get('localCampus')?.disable();
+    this.chamadoForm.get('ambienteLocal')?.disable();
+    this.chamadoForm.get('atribuidoPara')?.disable();
+    this.chamadoForm.get('novaNota')?.setValue('');
     this.chamadoForm.get('novaNota')?.clearValidators();
     this.chamadoForm.get('novaNota')?.updateValueAndValidity();
+    this.cdr.detectChanges();
   }
 
-  fecharChamado() {
-    // Força o status para Concluído e exige nota justificando
-    this.chamadoForm.get('status')?.setValue('Concluído');
+  async fecharChamado() {
+    if (!this.chamadoAtual) return;
+
     this.chamadoForm.get('novaNota')?.setValidators([Validators.required]);
     this.chamadoForm.get('novaNota')?.updateValueAndValidity();
 
     if (this.chamadoForm.get('novaNota')?.invalid) {
       this.snackBar.open(
-        'Adicione uma nota interna obrigatória para poder fechar o chamado.',
+        'Adicione uma justificativa no campo de anotações para fechar o chamado.',
         'OK',
         { duration: 4000 },
       );
       return;
     }
 
-    this.salvarAlteracoes('Chamado encerrado com sucesso!');
+    try {
+      const justificativa = this.chamadoForm.get('novaNota')?.value;
+      let textoNota = `- Status mudado de ${this.chamadoAtual.status} para Fechado`;
+      if (justificativa && justificativa.trim() !== '') {
+        textoNota += `\n- Justificativa: ${justificativa}`;
+      }
+
+      const novaNota: Nota = {
+        autorNome: this.usuarioLogado.nome,
+        autorFuncao: this.usuarioLogado.funcao,
+        texto: textoNota,
+        criadoEm: new Date().toISOString(),
+      };
+
+      await this.chamadosService.addNota(this.chamadoId, novaNota);
+      await this.chamadosService.updateStatusChamado(this.chamadoId, 'Fechado');
+
+      this.chamadoForm.get('novaNota')?.setValue('');
+      this.isEditing = false;
+      this.snackBar.open('Chamado encerrado com sucesso!', 'OK', { duration: 3000 });
+    } catch (err) {
+      console.error(err);
+      this.snackBar.open('Erro ao encerrar o chamado.', 'OK', { duration: 3000 });
+    }
   }
 
-  adicionarNotaAvulsa() {
+  async adicionarNotaAvulsa() {
     const notaTexto = this.chamadoForm.get('novaNota')?.value;
     if (!notaTexto || notaTexto.trim() === '') {
       this.snackBar.open('Escreva algo no campo de anotações primeiro.', 'OK', { duration: 3000 });
       return;
     }
 
-    this.notasInternas.push({
-      id: '1',
-      autor: 'Admin Logado', // Substituir pelo auth real
-      texto: notaTexto,
-      criadoEm: 'Agora',
-    });
+    try {
+      const novaNota: Nota = {
+        autorNome: this.usuarioLogado.nome,
+        autorFuncao: this.usuarioLogado.funcao,
+        texto: notaTexto,
+        criadoEm: new Date().toISOString(),
+      };
 
-    this.chamadoForm.get('novaNota')?.setValue('');
-    this.snackBar.open('Nota interna adicionada!', 'OK', { duration: 2000 });
+      await this.chamadosService.addNota(this.chamadoId, novaNota);
+      this.chamadoForm.get('novaNota')?.setValue('');
+      this.snackBar.open('Nota interna adicionada!', 'OK', { duration: 2000 });
+    } catch (err) {
+      console.error(err);
+      this.snackBar.open('Erro ao registrar nota.', 'OK', { duration: 3000 });
+    }
   }
 
-  salvarAlteracoes(mensagemSucesso = 'Alterações salvas com sucesso!') {
-    if (this.chamadoForm.invalid) {
+  async salvarAlteracoes() {
+    if (this.chamadoForm.invalid || !this.chamadoAtual) {
       this.snackBar.open('Por favor, preencha todos os campos obrigatórios.', 'OK', {
         duration: 3000,
       });
       return;
     }
 
-    // Aqui você extrai os dados e envia pro Firebase Update
-    const dadosAtualizados = this.chamadoForm.getRawValue();
-    console.log('Enviando dados ao Firebase:', dadosAtualizados);
+    try {
+      const formRaw = this.chamadoForm.getRawValue();
+      let linhasHistorico: string[] = [];
 
-    this.snackBar.open(mensagemSucesso, 'OK', { duration: 3000 });
-    this.voltar();
+      if (this.chamadoAtual.status !== formRaw.status) {
+        linhasHistorico.push(
+          `- Status mudado de '${this.chamadoAtual.status}' para '${formRaw.status}'`,
+        );
+      }
+      if (this.chamadoAtual.prioridade !== formRaw.prioridade) {
+        linhasHistorico.push(
+          `- Prioridade mudada de '${this.chamadoAtual.prioridade}' para '${formRaw.prioridade}'`,
+        );
+      }
+      if (this.chamadoAtual.atribuidoPara !== formRaw.atribuidoPara) {
+        const tecnicoSelecionado = this.listaTecnicos.find((t) => t.id === formRaw.atribuidoPara);
+        const nomeTecnico = tecnicoSelecionado ? tecnicoSelecionado.nome : 'Ninguém';
+        const nomeAnterior = this.chamadoAtual.atribuidoParaNome || 'Ninguém';
+        linhasHistorico.push(`- Responsável alterado de '${nomeAnterior}' para '${nomeTecnico}'`);
+      }
+      if (
+        this.chamadoAtual.localCampus !== formRaw.localCampus ||
+        this.chamadoAtual.ambienteLocal !== formRaw.ambienteLocal
+      ) {
+        linhasHistorico.push(`- Local/Ambiente updated pelo Administrador`);
+      }
+
+      const comentarioExtra = formRaw.novaNota ? formRaw.novaNota.trim() : '';
+      if (comentarioExtra !== '') {
+        linhasHistorico.push(`- Observação técnica: ${comentarioExtra}`);
+      }
+
+      if (linhasHistorico.length === 0) {
+        this.cancelarEdicao();
+        return;
+      }
+
+      const tecnicoAtual = this.listaTecnicos.find((t) => t.id === formRaw.atribuidoPara);
+      const textoFinalNota = linhasHistorico.join('\n');
+
+      const novaNota: Nota = {
+        autorNome: this.usuarioLogado.nome,
+        autorFuncao: this.usuarioLogado.funcao,
+        texto: textoFinalNota,
+        criadoEm: new Date().toISOString(),
+      };
+
+      const dadosAtualizados: Partial<Chamado> = {
+        localCampus: formRaw.localCampus,
+        ambienteLocal: formRaw.ambienteLocal,
+        prioridade: formRaw.prioridade,
+        status: formRaw.status,
+        atribuidoPara: formRaw.atribuidoPara,
+        atribuidoParaNome: tecnicoAtual ? tecnicoAtual.nome : '',
+      };
+
+      await this.chamadosService.addNota(this.chamadoId, novaNota);
+      await this.chamadosService.updateChamado(this.chamadoId, dadosAtualizados);
+
+      this.cancelarEdicao();
+      this.snackBar.open('Alterações salvas com sucesso!', 'OK', { duration: 3000 });
+    } catch (err) {
+      console.error(err);
+      this.snackBar.open('Erro ao salvar modificações.', 'OK', { duration: 3000 });
+    }
   }
 
   voltar() {
