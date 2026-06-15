@@ -43,5 +43,5 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
-# Firebase keys:
+# firebase keys:
 src/environments/environment.ts
