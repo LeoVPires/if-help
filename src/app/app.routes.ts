@@ -9,6 +9,7 @@ import { MeusChamados } from './features/meus-chamados/meus-chamados';
 import { homeGuard } from './core/guards/home-guard';
 import { authGuard } from './core/guards/auth-guard';
 import { AdminConfig } from './features/admin-config/admin-config';
+import { Sobre } from './features/sobre/sobre';
 
 export const routes: Routes = [
   // Rota raiz (redireciona usando o homeGuard)
@@ -55,6 +56,10 @@ export const routes: Routes = [
       {
         path: 'admin/configuracoes',
         component: AdminConfig,
+      },
+      {
+        path: 'sobre',
+        component: Sobre,
       },
     ],
   },

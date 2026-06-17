@@ -1,0 +1,102 @@
+<div class="about-container">
+  <header class="about-header animate-fade-in">
+    <div class="logo-area">
+      <mat-icon class="brand-icon">school</mat-icon>
+      <h1>IF Help!</h1>
+    </div>
+    <p class="subtitle">
+      Transformando a burocracia logística do Campus em resoluções rápidas e sem atrito.
+    </p>
+    <div class="meta-chips">
+      <mat-chip-set>
+        <mat-chip class="chip-disciplina" disabled>{{ disciplina }}</mat-chip>
+        <mat-chip class="chip-professor" disabled>Prof. {{ professor }}</mat-chip>
+      </mat-chip-set>
+    </div>
+  </header>
+
+  <div class="about-content-grid">
+    <section class="project-info">
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="card-header-icon color-warn">error_outline</mat-icon>
+          <mat-card-title>A Dor do Campus</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>
+            Problemas cotidianos, como a falta de insumos ou projetores danificados, frequentemente
+            deixam de ser reportados devido à complexidade e burocracia dos sistemas oficiais
+            atuais. Sem um canal ágil, as demandas acabam se perdendo em comunicações informais de
+            corredor, gerando atrasos crônicos e falta de centralização.
+          </p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card highlighted-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="card-header-icon color-primary">qr_code_2</mat-icon>
+          <mat-card-title>A Solução: IF Help!</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>
+            O <strong>IF Help!</strong> surge como uma plataforma unificada e simplificada de
+            chamados baseada em acessibilidade. Para o aluno, basta escanear um
+            <strong>QR Code</strong> na própria sala de aula para reportar o problema em três
+            cliques, sem necessidade de logins extensos. Para os servidores, entregamos um dashboard
+            limpo e intersetorial, permitindo o redirecionamento ágil de demandas mantendo o
+            histórico unificado.
+          </p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="card-header-icon color-accent">trending_up</mat-icon>
+          <mat-card-title>Viabilidade e Sustentabilidade</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>
+            Como iniciativa voltada a uma instituição pública, o foco está na
+            <strong>redução de desperdícios</strong> e otimização do tempo de trabalho dos
+            servidores, além de evitar a depreciação precoce do patrimônio. O projeto possui custo
+            zero de desenvolvimento, desenhado para rodar de forma prática mantido pelos próprios
+            estudantes de TI.
+          </p>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section class="team-info">
+      <mat-card class="team-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="card-header-icon color-group">groups</mat-icon>
+          <mat-card-title>Equipe de Desenvolvimento</mat-card-title>
+          <mat-card-subtitle>Estudantes de TI focados na solução</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="team-list">
+            <div class="team-member" *ngFor="let integrante of integrantes">
+              <div class="member-avatar">
+                {{ integrante.nome.charAt(0) }}
+              </div>
+              <div class="member-detail">
+                <span class="member-name">{{ integrante.nome }}</span>
+                <span class="member-role">{{ integrante.funcao }}</span>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+
+        <mat-divider></mat-divider>
+
+        <mat-card-footer class="team-footer">
+          <div class="methodology-badge">
+            <mat-icon>engineering</mat-icon>
+            <span>Gerenciado via Metodologia Scrum (MVP)</span>
+          </div>
+        </mat-card-footer>
+      </mat-card>
+    </section>
+  </div>
+</div>

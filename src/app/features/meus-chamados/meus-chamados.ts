@@ -112,7 +112,7 @@ export class MeusChamados implements OnInit, AfterViewInit {
       switch (property) {
         case 'id':
           // Garante que a ordenação por ID seja numérica e não textual
-          return Number(item.id) || 0;
+          return String(item.id) || 0;
 
         case 'localizacao':
           // Junta Local + Ambiente para ordenar em ordem alfabética contínua
