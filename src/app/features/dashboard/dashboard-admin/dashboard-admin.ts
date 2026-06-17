@@ -27,6 +27,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 
 import { Chamado, TipoDemanda, LocalCampus, AmbienteLocal } from '../../../core/modals/chamado';
 import { ConfigurarLocaisService } from '../../../core/services/configurar-locais';
+import { AgrupamentosService } from '../../../core/services/agrupamento';
 
 import { AgrupamentoDialogComponent } from './agrupamento-dialog/agrupamento-dialog';
 
@@ -67,10 +68,12 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
 
   private dialog = inject(MatDialog);
   private configurarLocaisService = inject(ConfigurarLocaisService);
+  private agrupamentosService = inject(AgrupamentosService);
 
   dataSource = new MatTableDataSource<Chamado>();
 
   displayedColumns: string[] = ['id', 'localizacao', 'demanda', 'status', 'acoes'];
+  expandedElement: Chamado | null = null;
 
   countSugestoesAgrupamento = 0;
   countAltaPrioridade = 0;
@@ -103,7 +106,9 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['chamados'] && this.chamados) {
-      this.dataSource.data = this.chamados;
+      this.dataSource.data = this.chamados.filter(
+        (c) => !c.agrupamentoId || c.agrupamentoId === c.id,
+      );
       this.calcularContadores();
       this.configurarFiltroPersonalizado();
     }
@@ -117,16 +122,12 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
       switch (property) {
         case 'localizacao':
           return `${item.localCampus}|${item.ambienteLocal}`.toLowerCase();
-
         case 'demanda':
           return item.tipoDemanda?.toLowerCase() ?? '';
-
         case 'status':
           return item.status?.toLowerCase();
-
         case 'id':
           return Number(item.id);
-
         default:
           return (item as any)[property];
       }
@@ -161,23 +162,18 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
   selecionarLocal(localNome: string) {
     this.filtros.local = localNome;
     this.filtros.ambiente = '';
-
     const localSelecionado = this.locaisDisponiveis.find((l) => l.nome === localNome);
-
     this.ambientesDisponiveis = localSelecionado?.ambientes ?? [];
-
     this.atualizarFiltroDataSource();
   }
 
   toggleCardFilter(filtroCard: 'agrupamento' | 'alta' | 'triagem') {
     this.filtros.cardFiltro = this.filtros.cardFiltro === filtroCard ? null : filtroCard;
-
     this.atualizarFiltroDataSource();
   }
 
   private atualizarFiltroDataSource() {
     this.dataSource.filter = JSON.stringify(this.filtros);
-
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
@@ -186,7 +182,6 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
   private configurarFiltroPersonalizado() {
     this.dataSource.filterPredicate = (data: Chamado, filterStr: string) => {
       const f: FilterState = JSON.parse(filterStr);
-
       let match = true;
 
       if (f.search) {
@@ -201,21 +196,10 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
         }
       }
 
-      if (f.categoria && data.tipoDemanda !== f.categoria) {
-        match = false;
-      }
-
-      if (f.prioridade && data.prioridade !== f.prioridade) {
-        match = false;
-      }
-
-      if (f.local && data.localCampus !== f.local) {
-        match = false;
-      }
-
-      if (f.ambiente && data.ambienteLocal !== f.ambiente) {
-        match = false;
-      }
+      if (f.categoria && data.tipoDemanda !== f.categoria) match = false;
+      if (f.prioridade && data.prioridade !== f.prioridade) match = false;
+      if (f.local && data.localCampus !== f.local) match = false;
+      if (f.ambiente && data.ambienteLocal !== f.ambiente) match = false;
 
       if (f.cardFiltro === 'alta' && data.prioridade !== 'Alta' && data.prioridade !== 'Crítica') {
         match = false;
@@ -229,9 +213,7 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
         match = match && this.temDuplicatas(data);
       }
 
-      if (f.status && data.status !== f.status) {
-        match = false;
-      }
+      if (f.status && data.status !== f.status) match = false;
 
       return match;
     };
@@ -246,41 +228,69 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
       (c) => c.atribuidoPara === '' && c.status === 'Aberto',
     ).length;
 
-    const grupos = this.chamados.filter((c) => c.status === 'Aberto').map((c) => c.idGrupo);
+    const grupos = this.chamados
+      .filter((c) => c.status === 'Aberto' && !c.agrupamentoId)
+      .map((c) => c.idGrupo);
 
     const gruposDuplicados = grupos.filter((item, index) => grupos.indexOf(item) !== index);
 
     this.countSugestoesAgrupamento = this.chamados.filter(
-      (c) => c.status === 'Aberto' && gruposDuplicados.includes(c.idGrupo),
+      (c) => c.status === 'Aberto' && !c.agrupamentoId && gruposDuplicados.includes(c.idGrupo),
     ).length;
   }
 
   private temDuplicatas(chamado: Chamado): boolean {
+    if (chamado.agrupamentoId) return false;
     return this.chamados.some(
-      (c) => c.idGrupo === chamado.idGrupo && c.id !== chamado.id && c.status === 'Aberto',
+      (c) =>
+        c.idGrupo === chamado.idGrupo &&
+        c.id !== chamado.id &&
+        c.status === 'Aberto' &&
+        !c.agrupamentoId,
     );
   }
 
   getChamadosParaAgrupar(chamadoBase: Chamado): Chamado[] {
+    if (chamadoBase.agrupamentoId) return [];
     return this.chamados.filter(
       (c) =>
         chamadoBase.status === 'Aberto' &&
         c.idGrupo === chamadoBase.idGrupo &&
         c.id !== chamadoBase.id &&
-        c.status === 'Aberto',
+        c.status === 'Aberto' &&
+        !c.agrupamentoId,
     );
+  }
+
+  getFilhosDoAgrupamento(paiId: string): Chamado[] {
+    return this.chamados.filter((c) => c.agrupamentoId === paiId && c.id !== paiId);
+  }
+
+  async desfazerAgrupamento(paiId: string, event: Event) {
+    event.stopPropagation();
+    if (confirm('Tem certeza que deseja separar e reverter os chamados deste grupo?')) {
+      try {
+        await this.agrupamentosService.desfazerAgrupamento(paiId);
+      } catch (error) {
+        console.error('Erro ao desfazer agrupamento:', error);
+      }
+    }
   }
 
   abrirDialogAgrupamento(element: Chamado) {
     const chamadosParaAgrupar = this.getChamadosParaAgrupar(element);
 
     if (chamadosParaAgrupar.length > 0) {
-      this.dialog.open(AgrupamentoDialogComponent, {
+      const dialogRef = this.dialog.open(AgrupamentoDialogComponent, {
         width: '600px',
         data: {
           chamadoBase: element,
           chamadosParaAgrupar,
         },
+      });
+
+      dialogRef.afterClosed().subscribe((confirmado) => {
+        if (confirmado) this.expandedElement = null;
       });
     }
   }

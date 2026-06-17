@@ -37,6 +37,7 @@ export interface Chamado {
   atribuidoPara: string;
   atribuidoParaNome: string;
   idGrupo: string;
+  agrupamentoId: string | null;
 }
 
 export interface Nota {
@@ -44,5 +45,24 @@ export interface Nota {
   autorNome: string;
   autorFuncao: string;
   texto: string;
+  criadoEm: string;
+}
+
+export interface Agrupamento {
+  id?: string;
+  idGrupo: string;
+
+  status: StatusChamado;
+  prioridade: PrioridadeChamado;
+
+  atribuidoPara: string;
+  atribuidoParaNome: string;
+
+  localCampus: string;
+  ambienteLocal: string;
+
+  chamadosIds: string[];
+
+  descricoes: string[];
   criadoEm: string;
 }

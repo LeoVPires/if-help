@@ -1,222 +1,134 @@
-<div class="dashboard-container">
-  <header class="dash-header">
-    <div class="title-area">
-      <h1>Painel Administrativo</h1>
-      <p>Gerencie prioridades, agrupe duplicatas e direcione demandas.</p>
-    </div>
-  </header>
-
-  <div class="filters-row">
-    <mat-form-field appearance="outline" class="filter-search">
-      <mat-icon matPrefix>search</mat-icon>
-      <input
-        matInput
-        (keyup)="aplicarFiltroTexto($event)"
-        placeholder="Buscar por ID, local, ambiente ou descrição..."
-      />
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Categoria</mat-label>
-      <mat-select (selectionChange)="aplicarFiltroSelect('categoria', $event.value)">
-        <mat-option value="">Todas as Categorias</mat-option>
-
-        @for (categoria of categoriasDisponiveis; track categoria) {
-          <mat-option [value]="categoria">
-            {{ categoria }}
-          </mat-option>
+<table mat-table [dataSource]="dataSource" matSort multiTemplateDataRows>
+  <ng-container matColumnDef="id">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
+    <td mat-cell *matCellDef="let element">
+      <div style="display: flex; align-items: center; gap: 4px">
+        @if (getFilhosDoAgrupamento(element.id!).length > 0) {
+          <mat-icon style="font-size: 18px; width: 18px; height: 18px; opacity: 0.7">
+            {{ expandedElement === element ? 'expand_less' : 'expand_more' }}
+          </mat-icon>
         }
-      </mat-select>
-    </mat-form-field>
+        <strong>#{{ element.id }}</strong>
+      </div>
+    </td>
+  </ng-container>
 
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Status</mat-label>
-      <mat-select (selectionChange)="aplicarFiltroSelect('status', $event.value)">
-        <mat-option value="">Qualquer status</mat-option>
+  <ng-container matColumnDef="localizacao">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Local e Ambiente</th>
+    <td mat-cell *matCellDef="let element">
+      <div class="cell-location">
+        <mat-icon>location_on</mat-icon>
+        <span>{{ element.localCampus }}</span>
+      </div>
+      <small class="text-muted">{{ element.ambienteLocal }}</small>
+    </td>
+  </ng-container>
 
-        @for (status of statusPossiveis; track status) {
-          <mat-option [value]="status">
-            {{ status }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Prioridade</mat-label>
-      <mat-select (selectionChange)="aplicarFiltroSelect('prioridade', $event.value)">
-        <mat-option value="">Todas</mat-option>
-
-        @for (prio of prioridadesDisponiveis; track prio) {
-          <mat-option [value]="prio">
-            {{ prio }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Local</mat-label>
-      <mat-select (selectionChange)="selecionarLocal($event.value)">
-        <mat-option value="">Todos os Locais</mat-option>
-
-        @for (local of locaisDisponiveis; track local.id) {
-          <mat-option [value]="local.nome">
-            {{ local.nome }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Ambiente</mat-label>
-      <mat-select
-        [disabled]="!filtros.local"
-        (selectionChange)="aplicarFiltroSelect('ambiente', $event.value)"
-      >
-        <mat-option value="">Todos os Ambientes</mat-option>
-
-        @for (ambiente of ambientesDisponiveis; track ambiente.id) {
-          <mat-option [value]="ambiente.nome">
-            {{ ambiente.nome }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-  </div>
-
-  <div class="summary-cards">
-    <mat-card
-      appearance="outlined"
-      class="stat-card"
-      [class.active]="filtros.cardFiltro === 'agrupamento'"
-      (click)="toggleCardFilter('agrupamento')"
-    >
-      <mat-card-subtitle>Sugestões de Agrupamento</mat-card-subtitle>
-
-      <mat-card-title>
-        {{ countSugestoesAgrupamento | number: '2.0' }}
-        <mat-icon>call_merge</mat-icon>
-      </mat-card-title>
-    </mat-card>
-
-    <mat-card
-      appearance="outlined"
-      class="stat-card"
-      [class.active]="filtros.cardFiltro === 'alta'"
-      (click)="toggleCardFilter('alta')"
-    >
-      <mat-card-subtitle>Alta Prioridade</mat-card-subtitle>
-
-      <mat-card-title>
-        {{ countAltaPrioridade | number: '2.0' }}
-      </mat-card-title>
-    </mat-card>
-
-    <mat-card
-      appearance="outlined"
-      class="stat-card"
-      [class.active]="filtros.cardFiltro === 'triagem'"
-      (click)="toggleCardFilter('triagem')"
-    >
-      <mat-card-subtitle>Aguardando Triagem</mat-card-subtitle>
-
-      <mat-card-title>
-        {{ countAguardandoTriagem | number: '2.0' }}
-      </mat-card-title>
-    </mat-card>
-  </div>
-
-  <div class="table-container mat-elevation-z0">
-    <table mat-table [dataSource]="dataSource" matSort>
-      <ng-container matColumnDef="id">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
-
-        <td mat-cell *matCellDef="let element">
-          <strong>#{{ element.id }}</strong>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="localizacao">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Local e Ambiente</th>
-
-        <td mat-cell *matCellDef="let element">
-          <div class="cell-location">
-            <mat-icon>location_on</mat-icon>
-            <span>{{ element.localCampus }}</span>
-          </div>
-
-          <small class="text-muted">
-            {{ element.ambienteLocal }}
-          </small>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="demanda">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Demanda e Contexto</th>
-
-        <td mat-cell *matCellDef="let element">
-          <span class="demand-desc">
-            {{ element.descricao }}
+  <ng-container matColumnDef="demanda">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Demanda e Contexto</th>
+    <td mat-cell *matCellDef="let element">
+      <span class="demand-desc">{{ element.descricao }}</span>
+      <div class="tags-area">
+        <span class="badge-tag">{{ element.tipoDemanda }}</span>
+        <span class="badge-tag prioridade" [ngClass]="element.prioridade | lowercase">
+          {{ element.prioridade }}
+        </span>
+        @if (getFilhosDoAgrupamento(element.id!).length > 0) {
+          <span class="badge-tag" style="background-color: #e0e0e0; color: #333; font-weight: bold">
+            Grupo (+{{ getFilhosDoAgrupamento(element.id!).length }})
           </span>
+        }
+      </div>
+    </td>
+  </ng-container>
 
-          <div class="tags-area">
-            <span class="badge-tag">
-              {{ element.tipoDemanda }}
-            </span>
+  <ng-container matColumnDef="status">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+    <td mat-cell *matCellDef="let element">
+      <strong>{{ element.status }}</strong>
+    </td>
+  </ng-container>
 
-            <span class="badge-tag prioridade" [ngClass]="element.prioridade | lowercase">
-              {{ element.prioridade }}
-            </span>
+  <ng-container matColumnDef="acoes">
+    <th mat-header-cell *matHeaderCellDef>Ações</th>
+    <td mat-cell *matCellDef="let element">
+      @if (!element.agrupamentoId && getChamadosParaAgrupar(element).length > 0) {
+        <button
+          mat-icon-button
+          color="primary"
+          matTooltip="Agrupar Demanda"
+          [matBadge]="getChamadosParaAgrupar(element).length"
+          matBadgeColor="warn"
+          (click)="$event.stopPropagation(); abrirDialogAgrupamento(element)"
+        >
+          <mat-icon>call_merge</mat-icon>
+        </button>
+      }
+
+      @if (element.agrupamentoId === element.id && getFilhosDoAgrupamento(element.id!).length > 0) {
+        <button
+          mat-icon-button
+          color="warn"
+          matTooltip="Desfazer Agrupamento (Separar)"
+          (click)="desfazerAgrupamento(element.id!, $event)"
+        >
+          <mat-icon>call_split</mat-icon>
+        </button>
+      }
+
+      <button
+        mat-icon-button
+        matTooltip="Configurar"
+        (click)="$event.stopPropagation()"
+        [routerLink]="['/chamado/editar', element.id]"
+      >
+        <mat-icon>settings</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="expandedDetail">
+    <td
+      mat-cell
+      *matCellDef="let element"
+      [attr.colspan]="displayedColumns.length"
+      style="padding: 0"
+    >
+      <div class="element-detail" [class.is-expanded]="element === expandedElement">
+        @if (getFilhosDoAgrupamento(element.id!).length > 0) {
+          <div class="nested-table-container">
+            <h4>Chamados Vinculados a este Agrupamento</h4>
+            <div class="nested-rows">
+              @for (filho of getFilhosDoAgrupamento(element.id!); track filho.id) {
+                <div class="nested-row">
+                  <span class="nested-id">#{{ filho.id }}</span>
+                  <span class="nested-desc">{{ filho.descricao }}</span>
+                  <span class="nested-author">Por: {{ filho.criadoPorNome }}</span>
+                  <span class="nested-date">{{ filho.criadoEm | date: 'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+              }
+            </div>
           </div>
-        </td>
-      </ng-container>
+        }
+      </div>
+    </td>
+  </ng-container>
 
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
 
-        <td mat-cell *matCellDef="let element">
-          <strong>{{ element.status }}</strong>
-        </td>
-      </ng-container>
+  <tr
+    mat-row
+    *matRowDef="let element; columns: displayedColumns"
+    class="element-row"
+    [class.expanded-row]="expandedElement === element"
+    (click)="expandedElement = expandedElement === element ? null : element"
+  ></tr>
 
-      <ng-container matColumnDef="acoes">
-        <th mat-header-cell *matHeaderCellDef>Ações</th>
+  <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
 
-        <td mat-cell *matCellDef="let element">
-          <button
-            mat-icon-button
-            color="primary"
-            matTooltip="Agrupar Demanda"
-            [matBadge]="getChamadosParaAgrupar(element).length"
-            [matBadgeHidden]="getChamadosParaAgrupar(element).length === 0"
-            matBadgeColor="warn"
-            (click)="abrirDialogAgrupamento(element)"
-          >
-            <mat-icon>call_merge</mat-icon>
-          </button>
-
-          <button
-            mat-icon-button
-            matTooltip="Configurar"
-            [routerLink]="['/chamado/editar', element.id]"
-          >
-            <mat-icon>settings</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-
-      <tr mat-row *matRowDef="let element; columns: displayedColumns" class="element-row"></tr>
-
-      <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell empty-state" colspan="5">
-          Nenhum chamado encontrado com esses filtros.
-        </td>
-      </tr>
-    </table>
-
-    <mat-paginator [pageSizeOptions]="[10, 25, 50]"></mat-paginator>
-  </div>
-</div>
+  <tr class="mat-row" *matNoDataRow>
+    <td class="mat-cell empty-state" [attr.colspan]="displayedColumns.length">
+      Nenhum chamado encontrado com esses filtros.
+    </td>
+  </tr>
+</table>

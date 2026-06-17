@@ -7,24 +7,30 @@
   <p>
     Foram encontrados outros chamados abertos neste mesmo local para a categoria
     <strong>{{ data.chamadoBase.tipoDemanda }}</strong
-    >.
+    >. Selecione quais deseja unificar ao Chamado <strong>#{{ data.chamadoBase.id }}</strong
+    >:
   </p>
 
-  <div class="checkbox-list">
+  <div
+    class="checkbox-list"
+    style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px"
+  >
     @for (sug of data.chamadosParaAgrupar; track sug.id) {
-      <mat-checkbox color="primary">
+      <mat-checkbox color="primary" [(ngModel)]="selecionados[sug.id!]">
         <strong>#{{ sug.id }}</strong>
         -
         {{ sug.descricao }}
-
-        <span class="autor"> (Aberto por: {{ sug.criadoPor }}) </span>
+        <span class="autor" style="opacity: 0.7; font-size: 0.9em">
+          (Aberto por: {{ sug.criadoPorNome }})
+        </span>
       </mat-checkbox>
     }
   </div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-stroked-button mat-dialog-close>Cancelar</button>
-
-  <button mat-flat-button color="primary">Confirmar e Agrupar Selecionados</button>
+  <button mat-stroked-button mat-dialog-close [disabled]="carregando">Cancelar</button>
+  <button mat-flat-button color="primary" [disabled]="carregando" (click)="confirmarAgrupamento()">
+    {{ carregando ? 'Agrupando...' : 'Confirmar e Agrupar Selecionados' }}
+  </button>
 </mat-dialog-actions>
