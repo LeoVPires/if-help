@@ -40,9 +40,11 @@ export class AmbienteDialog {
     { classe: 'local_hospital', label: 'Enfermaria' },
     { classe: 'account_balance', label: 'Auditório' },
     { classe: 'park', label: 'Área Externa' },
-    { classe: 'wc', label: 'banheiro' },
-    { classe: 'man', label: 'banheiro masculino' },
-    { classe: 'woman', label: 'banheiro feminino' },
+    { classe: 'wc', label: 'Banheiro' },
+    { classe: 'man', label: 'Banheiro Masculino' },
+    { classe: 'woman', label: 'Banheiro Feminino' },
+    { classe: 'transfer_within_a_station', label: 'Corredor' },
+    { classe: 'stairs_2', label: 'Escada' },
   ];
 
   // Adicionado o campo 'icone' para sumir com o erro NG01050

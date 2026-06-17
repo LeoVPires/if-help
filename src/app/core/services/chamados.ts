@@ -145,13 +145,14 @@ export class ChamadosService {
   }
 
   // ==========================================
-  // 4. ATRIBUIR RESPONSÁVEL
+  // 4. ATRIBUIR RESPONSÁVEL E MUDAR STATUS
   // ==========================================
   async atribuirResponsavel(chamadoId: string, uid: string, nome: string): Promise<void> {
     const chamadoDocRef = doc(this.firestore, `chamados/${chamadoId}`);
     return updateDoc(chamadoDocRef, {
       atribuidoPara: uid,
       atribuidoParaNome: nome,
+      //status: 'Em Execução',
     });
   }
 

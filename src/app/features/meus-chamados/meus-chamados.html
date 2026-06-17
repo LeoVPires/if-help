@@ -2,23 +2,71 @@
   <header class="dash-header">
     <div class="title-area">
       <h1>Meus Chamados</h1>
-      <p>Acompanhe, gerencie e cancele suas solicitações abertas no campus.</p>
-    </div>
-    <div class="header-actions">
-      <button mat-flat-button color="primary" (click)="atualizarDados()">
-        <mat-icon>refresh</mat-icon> Atualizar
-      </button>
+      <p>Acompanhe e gerencie as solicitações abertas por você no campus.</p>
     </div>
   </header>
 
   <div class="filters-row">
-    <mat-form-field appearance="outline" class="filter-search" style="flex: 1">
+    <mat-form-field appearance="outline" class="filter-search">
       <mat-icon matPrefix>search</mat-icon>
       <input
         matInput
         (keyup)="aplicarFiltroTexto($event)"
-        placeholder="Buscar por ID, local ou descrição do seu chamado..."
+        placeholder="Buscar por ID, local, ambiente ou descrição..."
       />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Categoria</mat-label>
+      <mat-select (selectionChange)="aplicarFiltroSelect('categoria', $event.value)">
+        <mat-option value="">Todas as Categorias</mat-option>
+        @for (categoria of categoriasDisponiveis; track categoria) {
+          <mat-option [value]="categoria">{{ categoria }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Status</mat-label>
+      <mat-select (selectionChange)="aplicarFiltroSelect('status', $event.value)">
+        <mat-option value="">Qualquer status</mat-option>
+        @for (status of statusPossiveis; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Prioridade</mat-label>
+      <mat-select (selectionChange)="aplicarFiltroSelect('prioridade', $event.value)">
+        <mat-option value="">Todas</mat-option>
+        @for (prio of prioridadesDisponiveis; track prio) {
+          <mat-option [value]="prio">{{ prio }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Local</mat-label>
+      <mat-select (selectionChange)="selecionarLocal($event.value)">
+        <mat-option value="">Todos os Locais</mat-option>
+        @for (local of locaisDisponiveis; track local.id) {
+          <mat-option [value]="local.nome">{{ local.nome }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Ambiente</mat-label>
+      <mat-select
+        [disabled]="!filtros.local"
+        (selectionChange)="aplicarFiltroSelect('ambiente', $event.value)"
+      >
+        <mat-option value="">Todos os Ambientes</mat-option>
+        @for (ambiente of ambientesDisponiveis; track ambiente.id) {
+          <mat-option [value]="ambiente.nome">{{ ambiente.nome }}</mat-option>
+        }
+      </mat-select>
     </mat-form-field>
   </div>
 
@@ -29,8 +77,11 @@
       [class.active]="filtros.cardFiltro === 'abertos'"
       (click)="toggleCardFilter('abertos')"
     >
-      <mat-card-subtitle>Meus Abertos</mat-card-subtitle>
-      <mat-card-title>{{ countAbertos | number: '2.0' }}</mat-card-title>
+      <mat-card-subtitle>Meus Abertos (Triagem)</mat-card-subtitle>
+      <mat-card-title>
+        {{ countMeusAbertos | number: '2.0' }}
+        <mat-icon color="accent">inbox</mat-icon>
+      </mat-card-title>
     </mat-card>
 
     <mat-card
@@ -40,7 +91,10 @@
       (click)="toggleCardFilter('andamento')"
     >
       <mat-card-subtitle>Em Andamento</mat-card-subtitle>
-      <mat-card-title>{{ countAndamento | number: '2.0' }}</mat-card-title>
+      <mat-card-title>
+        {{ countEmAndamento | number: '2.0' }}
+        <mat-icon color="primary">engineering</mat-icon>
+      </mat-card-title>
     </mat-card>
 
     <mat-card
@@ -49,8 +103,11 @@
       [class.active]="filtros.cardFiltro === 'historico'"
       (click)="toggleCardFilter('historico')"
     >
-      <mat-card-subtitle>Histórico (Resolvidos)</mat-card-subtitle>
-      <mat-card-title>{{ countHistorico | number: '2.0' }}</mat-card-title>
+      <mat-card-subtitle>Histórico (Fechados/Cancelados)</mat-card-subtitle>
+      <mat-card-title>
+        {{ countHistorico | number: '2.0' }}
+        <mat-icon>history</mat-icon>
+      </mat-card-title>
     </mat-card>
   </div>
 
@@ -64,24 +121,22 @@
       </ng-container>
 
       <ng-container matColumnDef="localizacao">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Local e Sala</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Local e Ambiente</th>
         <td mat-cell *matCellDef="let element">
           <div class="cell-location">
-            <mat-icon>location_on</mat-icon> <span>{{ element.bloco }}</span>
+            <mat-icon>location_on</mat-icon>
+            <span>{{ element.localCampus }}</span>
           </div>
-          <small class="text-muted">{{ element.sala }}</small>
+          <small class="text-muted">{{ element.ambienteLocal }}</small>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="demanda">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Demanda e Contexto</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo de Demanda</th>
         <td mat-cell *matCellDef="let element">
-          <span class="demand-desc">{{ element.descricao }}</span>
+          <span class="demand-desc">{{ element.tipoDemanda }}</span>
           <div class="tags-area">
-            <span class="badge-tag">{{ element.categoria }}</span>
-            <span class="badge-tag prioridade" [ngClass]="element.prioridade | lowercase">
-              {{ element.prioridade }}
-            </span>
+            <small class="text-muted">{{ element.descricao }}</small>
           </div>
         </td>
       </ng-container>
@@ -89,36 +144,41 @@
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
         <td mat-cell *matCellDef="let element">
-          <strong [ngClass]="{ 'text-execution': element.status === 'Em Execução' }">
+          <span class="badge-tag status" [ngClass]="element.status | lowercase">
             {{ element.status }}
-          </strong>
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="dataAbertura">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Data de Abertura</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element.criadoEm | date: 'dd MMM, HH:mm' }}
         </td>
       </ng-container>
 
       <ng-container matColumnDef="acoes">
         <th mat-header-cell *matHeaderCellDef>Ações</th>
         <td mat-cell *matCellDef="let element">
-          @if (
-            element.status !== 'Em Execução' &&
-            element.status !== 'Resolvido' &&
-            element.status !== 'Cancelado'
-          ) {
+          @if (element.status === 'Aberto' && !element.atribuidoPara) {
             <button
-              mat-icon-button
+              mat-stroked-button
               color="warn"
-              matTooltip="Cancelar Chamado"
-              (click)="abrirDialogCancelamento(element)"
+              matTooltip="Cancelar este chamado"
+              (click)="abrirDialogCancelar(element)"
             >
-              <mat-icon>cancel</mat-icon>
+              <mat-icon>close</mat-icon> Cancelar
             </button>
-          } @else if (element.status === 'Em Execução') {
-            <span matTooltip="Não é possível cancelar um chamado em execução técnica.">
-              <button mat-icon-button disabled>
-                <mat-icon style="color: #ccc">block</mat-icon>
-              </button>
-            </span>
-          } @else {
-            <span class="text-muted" style="font-size: 0.85em">Finalizado</span>
+          }
+
+          @if (element.status === 'Em Execução' || element.atribuidoPara) {
+            <button
+              mat-stroked-button
+              disabled
+              matTooltip="Este chamado já passou pela triagem e não pode ser cancelado pelo solicitante."
+            >
+              <mat-icon>lock</mat-icon> Bloqueado
+            </button>
           }
         </td>
       </ng-container>
@@ -127,8 +187,8 @@
       <tr mat-row *matRowDef="let element; columns: displayedColumns" class="element-row"></tr>
 
       <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell empty-state" colspan="5">
-          Você não possui nenhum chamado aberto ou encontrado com este filtro.
+        <td class="mat-cell empty-state" colspan="6">
+          Você não possui nenhum chamado correspondente a esses filtros.
         </td>
       </tr>
     </table>

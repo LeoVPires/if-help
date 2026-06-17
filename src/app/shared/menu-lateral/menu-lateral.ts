@@ -40,7 +40,8 @@ export class MenuLateral {
       label: 'Meus Chamados',
       icon: 'dashboard_2_edit',
       route: '/chamado/meus',
-      roles: ['aluno', 'servidor'], // Apenas usuários públicos precisam dessa aba dedicada
+      // roles: ['aluno', 'servidor'], // Apenas usuários públicos precisam dessa aba dedicada
+      roles: ['admin', 'servidor', 'aluno'],
     },
     {
       label: 'Configurações',
