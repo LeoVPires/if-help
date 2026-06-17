@@ -32,6 +32,7 @@ export interface Chamado {
   status: StatusChamado;
   prioridade: PrioridadeChamado;
   criadoPor: string;
+  criadoPorNome: string;
   criadoEm: string;
   atribuidoPara: string;
   atribuidoParaNome: string;

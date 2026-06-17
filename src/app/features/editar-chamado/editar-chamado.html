@@ -131,9 +131,11 @@
           </mat-card-header>
 
           <mat-card-content class="user-profile">
-            <div class="avatar">U</div>
+            <div class="avatar">
+              {{ getIniciais(chamadoAtual?.criadoPorNome) }}
+            </div>
             <div class="user-details">
-              <h3>Usuário do Sistema</h3>
+              <h3>{{ chamadoAtual?.criadoPorNome }}</h3>
               <p class="email">{{ chamadoAtual?.criadoPor }}</p>
               <p class="canal">Aberto via: {{ chamadoAtual?.canalAbertura | uppercase }}</p>
             </div>

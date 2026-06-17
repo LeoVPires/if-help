@@ -1,0 +1,30 @@
+<h2 mat-dialog-title>
+  <mat-icon>lightbulb</mat-icon>
+  Sugestão de Agrupamento Inteligente
+</h2>
+
+<mat-dialog-content>
+  <p>
+    Foram encontrados outros chamados abertos neste mesmo local para a categoria
+    <strong>{{ data.chamadoBase.tipoDemanda }}</strong
+    >.
+  </p>
+
+  <div class="checkbox-list">
+    @for (sug of data.chamadosParaAgrupar; track sug.id) {
+      <mat-checkbox color="primary">
+        <strong>#{{ sug.id }}</strong>
+        -
+        {{ sug.descricao }}
+
+        <span class="autor"> (Aberto por: {{ sug.criadoPor }}) </span>
+      </mat-checkbox>
+    }
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button mat-dialog-close>Cancelar</button>
+
+  <button mat-flat-button color="primary">Confirmar e Agrupar Selecionados</button>
+</mat-dialog-actions>
