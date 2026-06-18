@@ -128,90 +128,275 @@
   </div>
 
   <div class="table-container mat-elevation-z0">
-    <table mat-table [dataSource]="dataSource" matSort>
+    <table mat-table [dataSource]="dataSource" matSort multiTemplateDataRows>
+      <ng-container matColumnDef="expand">
+        <th mat-header-cell *matHeaderCellDef class="expand-col"></th>
+
+        <td mat-cell *matCellDef="let row" class="expand-col">
+          @if (row.kind === 'agrupamento') {
+            <button
+              mat-icon-button
+              type="button"
+              (click)="toggleExpansion(row); $event.stopPropagation()"
+              [matTooltip]="isExpanded(row) ? 'Recolher' : 'Expandir'"
+            >
+              <mat-icon>
+                {{ isExpanded(row) ? 'expand_more' : 'chevron_right' }}
+              </mat-icon>
+            </button>
+          } @else if (row.kind === 'chamado' && row.chamado.agrupamentoId) {
+            <mat-icon class="child-marker" matTooltip="Chamado dentro de agrupamento">
+              subdirectory_arrow_right
+            </mat-icon>
+          }
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
 
-        <td mat-cell *matCellDef="let element">
-          <strong>#{{ element.id }}</strong>
+        <td mat-cell *matCellDef="let row">
+          @if (row.kind === 'agrupamento') {
+            <div class="cell-id">
+              <strong>AGRUPAMENTO</strong>
+              <span>#{{ row.agrupamento.id ?? row.agrupamento.idGrupo }}</span>
+            </div>
+          } @else {
+            <strong>#{{ row.chamado.id }}</strong>
+          }
         </td>
       </ng-container>
 
       <ng-container matColumnDef="localizacao">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Local e Ambiente</th>
 
-        <td mat-cell *matCellDef="let element">
-          <div class="cell-location">
-            <mat-icon>location_on</mat-icon>
-            <span>{{ element.localCampus }}</span>
-          </div>
+        <td mat-cell *matCellDef="let row">
+          @if (row.kind === 'agrupamento') {
+            <div class="cell-location">
+              <mat-icon>folder</mat-icon>
+              <span>{{ row.agrupamento.localCampus }}</span>
+            </div>
 
-          <small class="text-muted">
-            {{ element.ambienteLocal }}
-          </small>
+            <small class="text-muted">
+              {{ row.agrupamento.ambienteLocal }} • {{ row.filhos.length }} chamado(s)
+            </small>
+          } @else {
+            <div class="cell-location">
+              <mat-icon>location_on</mat-icon>
+              <span>{{ row.chamado.localCampus }}</span>
+            </div>
+
+            <small class="text-muted">
+              {{ row.chamado.ambienteLocal }}
+            </small>
+          }
         </td>
       </ng-container>
 
       <ng-container matColumnDef="demanda">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Demanda e Contexto</th>
 
-        <td mat-cell *matCellDef="let element">
-          <span class="demand-desc">
-            {{ element.descricao }}
-          </span>
-
-          <div class="tags-area">
-            <span class="badge-tag">
-              {{ element.tipoDemanda }}
+        <td mat-cell *matCellDef="let row">
+          @if (row.kind === 'agrupamento') {
+            <span class="demand-desc">
+              {{
+                row.agrupamento.descricaoPrincipal ?? row.agrupamento.membros?.[0]?.descricao ?? '—'
+              }}
             </span>
 
-            <span class="badge-tag prioridade" [ngClass]="element.prioridade | lowercase">
-              {{ element.prioridade }}
+            <div class="tags-area">
+              <span class="badge-tag">
+                {{ row.agrupamento.tipoDemanda ?? row.agrupamento.membros?.[0]?.tipoDemanda }}
+              </span>
+
+              <span class="badge-tag prioridade" [ngClass]="row.agrupamento.prioridade | lowercase">
+                {{ row.agrupamento.prioridade }}
+              </span>
+            </div>
+          } @else {
+            <span class="demand-desc">
+              {{ row.chamado.descricao }}
             </span>
-          </div>
+
+            <div class="tags-area">
+              <span class="badge-tag">
+                {{ row.chamado.tipoDemanda }}
+              </span>
+
+              <span class="badge-tag prioridade" [ngClass]="row.chamado.prioridade | lowercase">
+                {{ row.chamado.prioridade }}
+              </span>
+            </div>
+          }
         </td>
       </ng-container>
 
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
 
-        <td mat-cell *matCellDef="let element">
-          <strong>{{ element.status }}</strong>
+        <td mat-cell *matCellDef="let row">
+          <strong>
+            @if (row.kind === 'agrupamento') {
+              {{ row.agrupamento.status }}
+            } @else {
+              {{ row.chamado.status }}
+            }
+          </strong>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="acoes">
         <th mat-header-cell *matHeaderCellDef>Ações</th>
 
-        <td mat-cell *matCellDef="let element">
-          <button
-            mat-icon-button
-            color="primary"
-            matTooltip="Agrupar Demanda"
-            [matBadge]="getChamadosParaAgrupar(element).length"
-            [matBadgeHidden]="getChamadosParaAgrupar(element).length === 0"
-            matBadgeColor="warn"
-            (click)="abrirDialogAgrupamento(element)"
-          >
-            <mat-icon>call_merge</mat-icon>
-          </button>
+        <td mat-cell *matCellDef="let row">
+          @if (row.kind === 'chamado' && !row.chamado.agrupamentoId) {
+            <button
+              mat-icon-button
+              color="primary"
+              matTooltip="Agrupar Demanda"
+              [matBadge]="getQuantidadeParaBadge(row)"
+              [matBadgeHidden]="getQuantidadeParaBadge(row) === 0"
+              matBadgeColor="warn"
+              (click)="abrirDialogAgrupamento(row.chamado)"
+            >
+              <mat-icon>call_merge</mat-icon>
+            </button>
 
-          <button
-            mat-icon-button
-            matTooltip="Configurar"
-            [routerLink]="['/chamado/editar', element.id]"
-          >
-            <mat-icon>settings</mat-icon>
-          </button>
+            <button
+              mat-icon-button
+              matTooltip="Configurar"
+              [routerLink]="['/chamado/editar', row.chamado.id]"
+            >
+              <mat-icon>settings</mat-icon>
+            </button>
+          } @else if (row.kind === 'chamado' && row.chamado.agrupamentoId) {
+            <button
+              mat-icon-button
+              color="warn"
+              matTooltip="Desagrupar apenas este chamado"
+              (click)="desagruparChamadoDoAgrupamento(row.chamado); $event.stopPropagation()"
+            >
+              <mat-icon>call_split</mat-icon>
+            </button>
+          } @else {
+            <button
+              mat-icon-button
+              color="primary"
+              matTooltip="Adicionar chamados ao agrupamento"
+              [matBadge]="getQuantidadeParaAdicionarAoAgrupamento(row.agrupamento)"
+              [matBadgeHidden]="getQuantidadeParaAdicionarAoAgrupamento(row.agrupamento) === 0"
+              matBadgeColor="warn"
+              (click)="abrirDialogAdicionarAoAgrupamento(row)"
+            >
+              <mat-icon>call_merge</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="warn"
+              matTooltip="Desfazer agrupamento"
+              (click)="desfazerAgrupamento(row); $event.stopPropagation()"
+            >
+              <mat-icon>call_split</mat-icon>
+            </button>
+
+            <button
+              mat-icon-button
+              matTooltip="Configurar agrupamento"
+              [routerLink]="['/chamado/editar', row.agrupamento.id ?? row.agrupamento.idGrupo]"
+            >
+              <mat-icon>settings</mat-icon>
+            </button>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="expandedDetail">
+        <td
+          mat-cell
+          *matCellDef="let row"
+          [attr.colspan]="displayedColumns.length"
+          class="detail-cell"
+        >
+          @if (row.kind === 'agrupamento' && isExpanded(row)) {
+            <div class="detail-wrapper">
+              <div class="filhos-tabela">
+                @for (filho of row.filhos; track filho.id) {
+                  <div class="filho-row" [class.filho-agrupado]="true">
+                    <div class="filho-cell expand-col child-marker-col">
+                      <mat-icon class="child-marker">subdirectory_arrow_right</mat-icon>
+                    </div>
+
+                    <div class="filho-cell">
+                      <strong>#{{ filho.id }}</strong>
+                    </div>
+
+                    <div class="filho-cell">
+                      <div class="cell-location">
+                        <mat-icon>location_on</mat-icon>
+                        <span>{{ filho.localCampus }}</span>
+                      </div>
+
+                      <small class="text-muted">
+                        {{ filho.ambienteLocal }}
+                      </small>
+                    </div>
+
+                    <div class="filho-cell">
+                      <span class="demand-desc">
+                        {{ filho.descricao }}
+                      </span>
+
+                      <div class="tags-area">
+                        <span class="badge-tag">
+                          {{ filho.tipoDemanda }}
+                        </span>
+
+                        <span class="badge-tag prioridade" [ngClass]="filho.prioridade | lowercase">
+                          {{ filho.prioridade }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="filho-cell">
+                      <strong>{{ filho.status }}</strong>
+                    </div>
+
+                    <div class="filho-cell actions-cell">
+                      <button
+                        mat-icon-button
+                        color="warn"
+                        matTooltip="Desagrupar apenas este chamado"
+                        (click)="desagruparChamadoDoAgrupamento(filho); $event.stopPropagation()"
+                      >
+                        <mat-icon>call_split</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
         </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
 
-      <tr mat-row *matRowDef="let element; columns: displayedColumns" class="element-row"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        class="element-row"
+        [class.group-row]="row.kind === 'agrupamento'"
+        [class.child-row]="row.kind === 'chamado' && row.chamado.agrupamentoId"
+      ></tr>
+
+      <tr
+        mat-row
+        *matRowDef="let row; columns: ['expandedDetail']; when: isGroupRow"
+        class="detail-row"
+      ></tr>
 
       <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell empty-state" colspan="5">
+        <td class="mat-cell empty-state" colspan="6">
           Nenhum chamado encontrado com esses filtros.
         </td>
       </tr>

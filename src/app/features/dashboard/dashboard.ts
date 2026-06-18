@@ -3,8 +3,9 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 
 import { DashboardAdmin } from './dashboard-admin/dashboard-admin';
 import { DashboardPublic } from './dashboard-public/dashboard-public';
-import { Chamado } from '../../core/modals/chamado';
+import { Agrupamento, Chamado } from '../../core/modals/chamado';
 import { ChamadosService } from '../../core/services/chamados';
+import { AgrupamentosService } from '../../core/services/agrupamento';
 import { AsyncPipe } from '@angular/common';
 import { Subscription } from 'rxjs';
 
@@ -17,8 +18,11 @@ import { Subscription } from 'rxjs';
 export class Dashboard implements OnInit, OnDestroy {
   public authService = inject(AuthService);
   private chamadosService = inject(ChamadosService);
+  private agrupamentosService = inject(AgrupamentosService);
 
   chamados: Chamado[] = [];
+  agrupamentos: Agrupamento[] = [];
+
   userRole: 'admin' | 'servidor' | 'aluno' = 'aluno';
   private subs = new Subscription();
 
@@ -32,16 +36,20 @@ export class Dashboard implements OnInit, OnDestroy {
     });
     this.subs.add(authSub);
 
-    // 2. Carrega os chamados do serviço
     const chamadosSub = this.chamadosService.getChamados().subscribe({
       next: (chamados) => {
         this.chamados = chamados;
       },
-      error: (err) => {
-        console.error('Erro detectado no getChamados:', err);
+    });
+
+    const agrupamentosSub = this.agrupamentosService.getAgrupamentos().subscribe({
+      next: (agrupamentos) => {
+        this.agrupamentos = agrupamentos;
       },
     });
+
     this.subs.add(chamadosSub);
+    this.subs.add(agrupamentosSub);
   }
 
   ngOnDestroy(): void {

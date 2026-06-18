@@ -1,0 +1,17 @@
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+}
+
+.autor {
+  margin-left: 0.35rem;
+  color: #6b7280;
+}

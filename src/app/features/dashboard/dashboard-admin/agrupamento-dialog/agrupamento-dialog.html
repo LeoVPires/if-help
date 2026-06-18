@@ -1,23 +1,29 @@
 <h2 mat-dialog-title>
-  <mat-icon>lightbulb</mat-icon>
-  Sugestão de Agrupamento Inteligente
+  @if (data.modo === 'adicionar') {
+    Adicionar chamados ao agrupamento
+  } @else {
+    Agrupar chamado #{{ data.chamadoBase?.id }}
+  }
 </h2>
 
-<mat-dialog-content>
+<mat-dialog-content class="dialog-content">
   <p>
-    Foram encontrados outros chamados abertos neste mesmo local para a categoria
-    <strong>{{ data.chamadoBase.tipoDemanda }}</strong
-    >.
+    Foram encontrados outros chamados abertos no mesmo local e com o mesmo
+    <strong>idGrupo</strong> do chamado / agrupamento base.
   </p>
 
   <div class="checkbox-list">
     @for (sug of data.chamadosParaAgrupar; track sug.id) {
-      <mat-checkbox color="primary">
+      <mat-checkbox
+        color="primary"
+        [checked]="estaSelecionado(sug.id!)"
+        (change)="alternarSelecao(sug.id!, $event.checked)"
+      >
         <strong>#{{ sug.id }}</strong>
         -
         {{ sug.descricao }}
 
-        <span class="autor"> (Aberto por: {{ sug.criadoPor }}) </span>
+        <span class="autor"> (Aberto por: {{ sug.criadoPorNome || sug.criadoPor }}) </span>
       </mat-checkbox>
     }
   </div>
@@ -26,5 +32,12 @@
 <mat-dialog-actions align="end">
   <button mat-stroked-button mat-dialog-close>Cancelar</button>
 
-  <button mat-flat-button color="primary">Confirmar e Agrupar Selecionados</button>
+  <button
+    mat-flat-button
+    color="primary"
+    [disabled]="selecionados.size === 0"
+    (click)="confirmar()"
+  >
+    Confirmar e Agrupar Selecionados
+  </button>
 </mat-dialog-actions>
