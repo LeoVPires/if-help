@@ -96,6 +96,9 @@ table {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
+  .mat-icon {
+    align-self: center;
+  }
 }
 
 .cell-main {
@@ -182,10 +185,9 @@ tr.mat-mdc-row.mdc-data-table__row.cdk-row.detail-row {
 
 .filho-row {
   display: grid;
-  grid-template-columns: 62px minmax(220px, 2.25fr) minmax(220px, 2.2fr) minmax(
-      130px,
-      0.8fr
-    ) minmax(150px, 0.8fr);
+  grid-template-columns:
+    62px minmax(220px, 2.25fr) minmax(220px, 2.2fr) minmax(130px, 0.8fr)
+    minmax(150px, 0.8fr);
   align-items: stretch;
   border-bottom: 1px solid #eef2f7;
   background: #fff;
