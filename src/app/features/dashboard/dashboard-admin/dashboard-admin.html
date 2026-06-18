@@ -144,6 +144,10 @@
                 {{ isExpanded(row) ? 'expand_more' : 'chevron_right' }}
               </mat-icon>
             </button>
+          } @else if (row.kind === 'chamado' && row.chamado.agrupamentoId) {
+            <mat-icon class="child-marker" matTooltip="Chamado dentro de agrupamento">
+              subdirectory_arrow_right
+            </mat-icon>
           }
         </td>
       </ng-container>
@@ -195,15 +199,15 @@
         <td mat-cell *matCellDef="let row">
           @if (row.kind === 'agrupamento') {
             <span class="demand-desc">
-              {{ row.agrupamento.descricoes[0] }}
+              {{
+                row.agrupamento.descricaoPrincipal ?? row.agrupamento.membros?.[0]?.descricao ?? '—'
+              }}
             </span>
 
             <div class="tags-area">
-              @for (tipo of row.agrupamento.tiposDemanda; track tipo) {
-                <span class="badge-tag">
-                  {{ tipo }}
-                </span>
-              }
+              <span class="badge-tag">
+                {{ row.agrupamento.tipoDemanda ?? row.agrupamento.membros?.[0]?.tipoDemanda }}
+              </span>
 
               <span class="badge-tag prioridade" [ngClass]="row.agrupamento.prioridade | lowercase">
                 {{ row.agrupamento.prioridade }}
@@ -245,7 +249,7 @@
         <th mat-header-cell *matHeaderCellDef>Ações</th>
 
         <td mat-cell *matCellDef="let row">
-          @if (row.kind === 'chamado') {
+          @if (row.kind === 'chamado' && !row.chamado.agrupamentoId) {
             <button
               mat-icon-button
               color="primary"
@@ -265,14 +269,42 @@
             >
               <mat-icon>settings</mat-icon>
             </button>
+          } @else if (row.kind === 'chamado' && row.chamado.agrupamentoId) {
+            <button
+              mat-icon-button
+              color="warn"
+              matTooltip="Desagrupar apenas este chamado"
+              (click)="desagruparChamadoDoAgrupamento(row.chamado); $event.stopPropagation()"
+            >
+              <mat-icon>call_split</mat-icon>
+            </button>
           } @else {
+            <button
+              mat-icon-button
+              color="primary"
+              matTooltip="Adicionar chamados ao agrupamento"
+              [matBadge]="getQuantidadeParaAdicionarAoAgrupamento(row.agrupamento)"
+              [matBadgeHidden]="getQuantidadeParaAdicionarAoAgrupamento(row.agrupamento) === 0"
+              matBadgeColor="warn"
+              (click)="abrirDialogAdicionarAoAgrupamento(row)"
+            >
+              <mat-icon>call_merge</mat-icon>
+            </button>
             <button
               mat-icon-button
               color="warn"
               matTooltip="Desfazer agrupamento"
-              (click)="desfazerAgrupamento(row)"
+              (click)="desfazerAgrupamento(row); $event.stopPropagation()"
             >
               <mat-icon>call_split</mat-icon>
+            </button>
+
+            <button
+              mat-icon-button
+              matTooltip="Configurar agrupamento"
+              [routerLink]="['/chamado/editar', row.agrupamento.id ?? row.agrupamento.idGrupo]"
+            >
+              <mat-icon>settings</mat-icon>
             </button>
           }
         </td>
@@ -287,27 +319,57 @@
         >
           @if (row.kind === 'agrupamento' && isExpanded(row)) {
             <div class="detail-wrapper">
-              <div class="detail-header">
-                <strong>Chamados filhos</strong>
-                <span>{{ row.filhos.length }} item(ns)</span>
-              </div>
-
-              <div class="filhos-lista">
+              <div class="filhos-tabela">
                 @for (filho of row.filhos; track filho.id) {
-                  <div class="filho-item">
-                    <div class="filho-topo">
+                  <div class="filho-row" [class.filho-agrupado]="true">
+                    <div class="filho-cell expand-col child-marker-col">
+                      <mat-icon class="child-marker">subdirectory_arrow_right</mat-icon>
+                    </div>
+
+                    <div class="filho-cell">
                       <strong>#{{ filho.id }}</strong>
-                      <span>{{ filho.status }}</span>
                     </div>
 
-                    <div class="filho-desc">
-                      {{ filho.descricao }}
+                    <div class="filho-cell">
+                      <div class="cell-location">
+                        <mat-icon>location_on</mat-icon>
+                        <span>{{ filho.localCampus }}</span>
+                      </div>
+
+                      <small class="text-muted">
+                        {{ filho.ambienteLocal }}
+                      </small>
                     </div>
 
-                    <div class="filho-meta">
-                      <span>{{ filho.tipoDemanda }}</span>
-                      <span>{{ filho.prioridade }}</span>
-                      <span>Aberto por {{ filho.criadoPorNome }}</span>
+                    <div class="filho-cell">
+                      <span class="demand-desc">
+                        {{ filho.descricao }}
+                      </span>
+
+                      <div class="tags-area">
+                        <span class="badge-tag">
+                          {{ filho.tipoDemanda }}
+                        </span>
+
+                        <span class="badge-tag prioridade" [ngClass]="filho.prioridade | lowercase">
+                          {{ filho.prioridade }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="filho-cell">
+                      <strong>{{ filho.status }}</strong>
+                    </div>
+
+                    <div class="filho-cell actions-cell">
+                      <button
+                        mat-icon-button
+                        color="warn"
+                        matTooltip="Desagrupar apenas este chamado"
+                        (click)="desagruparChamadoDoAgrupamento(filho); $event.stopPropagation()"
+                      >
+                        <mat-icon>call_split</mat-icon>
+                      </button>
                     </div>
                   </div>
                 }
@@ -324,6 +386,7 @@
         *matRowDef="let row; columns: displayedColumns"
         class="element-row"
         [class.group-row]="row.kind === 'agrupamento'"
+        [class.child-row]="row.kind === 'chamado' && row.chamado.agrupamentoId"
       ></tr>
 
       <tr

@@ -1,13 +1,15 @@
 <h2 mat-dialog-title>
-  <mat-icon>lightbulb</mat-icon>
-  Sugestão de Agrupamento Inteligente
+  @if (data.modo === 'adicionar') {
+    Adicionar chamados ao agrupamento
+  } @else {
+    Agrupar chamado #{{ data.chamadoBase?.id }}
+  }
 </h2>
 
 <mat-dialog-content class="dialog-content">
   <p>
     Foram encontrados outros chamados abertos no mesmo local e com o mesmo
-    <strong>idGrupo</strong> do chamado base: <strong>#{{ data.chamadoBase.id }}</strong
-    >.
+    <strong>idGrupo</strong> do chamado / agrupamento base.
   </p>
 
   <div class="checkbox-list">

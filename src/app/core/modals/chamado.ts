@@ -101,3 +101,10 @@ export type DashboardItem =
       kind: 'agrupamento';
       agrupamento: Agrupamento;
     };
+
+export interface AgrupamentoDialogData {
+  chamadoBase?: Chamado;
+  agrupamento?: Agrupamento;
+  chamadosParaAgrupar: Chamado[];
+  modo?: 'criar' | 'adicionar';
+}

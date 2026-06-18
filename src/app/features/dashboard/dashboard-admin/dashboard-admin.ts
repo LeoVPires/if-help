@@ -411,6 +411,43 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
   // AGRUPAMENTO
   // =========================================================
 
+  getChamadosDisponiveisParaAdicionar(agrupamento: Agrupamento): Chamado[] {
+    return this.chamados.filter(
+      (c) => !c.agrupamentoId && c.status === 'Aberto' && c.idGrupo === agrupamento.idGrupo,
+    );
+  }
+
+  getQuantidadeParaAdicionarAoAgrupamento(agrupamento: Agrupamento): number {
+    return this.getChamadosDisponiveisParaAdicionar(agrupamento).length;
+  }
+
+  abrirDialogAdicionarAoAgrupamento(row: DashboardRow) {
+    if (row.kind !== 'agrupamento') return;
+
+    const candidatos = this.getChamadosDisponiveisParaAdicionar(row.agrupamento);
+
+    if (candidatos.length === 0) {
+      return;
+    }
+
+    const ref = this.dialog.open(AgrupamentoDialogComponent, {
+      width: '680px',
+      data: {
+        agrupamento: row.agrupamento,
+        chamadosParaAgrupar: candidatos,
+        modo: 'adicionar',
+      },
+    });
+
+    ref.afterClosed().subscribe(async (idsSelecionados: string[]) => {
+      if (!idsSelecionados?.length) return;
+
+      for (const id of idsSelecionados) {
+        await this.agrupamentosService.adicionarChamado(row.agrupamento.id!, id);
+      }
+    });
+  }
+
   getChamadosParaAgrupar(chamadoBase: Chamado): Chamado[] {
     return (this.chamados ?? []).filter(
       (c) =>
@@ -470,6 +507,12 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
     } catch (error) {
       console.error(error);
     }
+  }
+
+  desagruparChamadoDoAgrupamento(chamado: Chamado) {
+    if (!chamado.agrupamentoId) return;
+
+    this.agrupamentosService.removerChamado(chamado.agrupamentoId, chamado.id!);
   }
 
   async atualizarStatusAgrupamento(row: DashboardRow, novoStatus: Chamado['status']) {

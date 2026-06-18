@@ -6,12 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 
-import { Chamado } from '../../../../core/modals/chamado';
-
-export interface AgrupamentoDialogData {
-  chamadoBase: Chamado;
-  chamadosParaAgrupar: Chamado[];
-}
+import { Chamado, AgrupamentoDialogData } from '../../../../core/modals/chamado';
 
 @Component({
   selector: 'app-agrupamento-dialog',

@@ -252,14 +252,13 @@ export class AgrupamentosService {
 
     const novosChamadosIds = [...agrupamento.chamadosIds, chamadoId];
     const novosMembros = [...agrupamento.membros, this.criarSnapshotChamado(chamado)];
-    const novosTipos = [...new Set([...agrupamento.tipoDemanda, chamado.tipoDemanda])];
+
     const novasDescricoes = [...agrupamento.descricoes, chamado.descricao];
 
     const batch = writeBatch(this.firestore);
     batch.update(agrupRef, {
       chamadosIds: novosChamadosIds,
       membros: novosMembros,
-      tiposDemanda: novosTipos,
       descricoes: novasDescricoes,
       atualizadoEm: new Date().toISOString(),
     });
@@ -313,7 +312,6 @@ export class AgrupamentosService {
     batch.update(agrupRef, {
       chamadosIds: chamadosIdsRestantes,
       membros: membrosRestantes,
-      tiposDemanda: [...new Set(membrosRestantes.map((m) => m.tipoDemanda))],
       descricoes: membrosRestantes.map((m) => m.descricao),
       atualizadoEm: new Date().toISOString(),
     });
