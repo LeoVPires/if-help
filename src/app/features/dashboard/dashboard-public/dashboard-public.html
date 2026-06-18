@@ -2,26 +2,94 @@
   <header class="dash-header">
     <div class="title-area">
       <h1>Monitor de Demandas</h1>
-      <p>Visualize o status dos chamados abertos no campus em tempo real.</p>
-    </div>
-
-    <div class="search-area">
-      <mat-form-field appearance="outline" class="search-input">
-        <mat-icon matPrefix>search</mat-icon>
-        <input
-          matInput
-          (keyup)="applySearchFilter($event)"
-          placeholder="Filtrar por local ou demanda..."
-        />
-      </mat-form-field>
+      <p>Visualize os chamados abertos no campus em tempo real.</p>
     </div>
   </header>
+
+  <div class="filters-row">
+    <mat-form-field appearance="outline" class="filter-search">
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        (keyup)="aplicarFiltroTexto($event)"
+        placeholder="Buscar por local, ambiente, tipo ou descrição..."
+      />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Categoria</mat-label>
+      <mat-select (selectionChange)="aplicarFiltroSelect('categoria', $event.value)">
+        <mat-option value="">Todas as Categorias</mat-option>
+
+        @for (categoria of categoriasDisponiveis; track categoria) {
+          <mat-option [value]="categoria">
+            {{ categoria }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Status</mat-label>
+      <mat-select (selectionChange)="aplicarFiltroSelect('status', $event.value)">
+        <mat-option value="">Qualquer status</mat-option>
+
+        @for (status of statusPossiveis; track status) {
+          <mat-option [value]="status">
+            {{ status }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Prioridade</mat-label>
+      <mat-select (selectionChange)="aplicarFiltroSelect('prioridade', $event.value)">
+        <mat-option value="">Todas</mat-option>
+
+        @for (prio of prioridadesDisponiveis; track prio) {
+          <mat-option [value]="prio">
+            {{ prio }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Local</mat-label>
+      <mat-select (selectionChange)="selecionarLocal($event.value)">
+        <mat-option value="">Todos os Locais</mat-option>
+
+        @for (local of locaisDisponiveis; track local.id) {
+          <mat-option [value]="local.nome">
+            {{ local.nome }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Ambiente</mat-label>
+      <mat-select
+        [disabled]="!filtros.local"
+        (selectionChange)="aplicarFiltroSelect('ambiente', $event.value)"
+      >
+        <mat-option value="">Todos os Ambientes</mat-option>
+
+        @for (ambiente of ambientesDisponiveis; track ambiente.id) {
+          <mat-option [value]="ambiente.nome">
+            {{ ambiente.nome }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
 
   <div class="summary-cards">
     <mat-card
       appearance="outlined"
       class="stat-card"
-      [class.active]="activeStatusFilter === 'Aberto'"
+      [class.active]="filtros.cardFiltro === 'Aberto'"
       (click)="toggleStatusFilter('Aberto')"
     >
       <mat-card-subtitle>Em Aberto</mat-card-subtitle>
@@ -31,7 +99,7 @@
     <mat-card
       appearance="outlined"
       class="stat-card"
-      [class.active]="activeStatusFilter === 'Em Execução'"
+      [class.active]="filtros.cardFiltro === 'Em Execução'"
       (click)="toggleStatusFilter('Em Execução')"
     >
       <mat-card-subtitle>Em Execução</mat-card-subtitle>
@@ -41,7 +109,7 @@
     <mat-card
       appearance="outlined"
       class="stat-card"
-      [class.active]="activeStatusFilter === 'Concluído'"
+      [class.active]="filtros.cardFiltro === 'Concluído'"
       (click)="toggleStatusFilter('Concluído')"
     >
       <mat-card-subtitle>Resolvidos</mat-card-subtitle>
@@ -50,49 +118,153 @@
   </div>
 
   <div class="table-container mat-elevation-z0">
-    <table mat-table [dataSource]="dataSource" matSort>
+    <table mat-table [dataSource]="dataSource" matSort multiTemplateDataRows>
+      <ng-container matColumnDef="expand">
+        <th mat-header-cell *matHeaderCellDef class="expand-col"></th>
+
+        <td mat-cell *matCellDef="let row" class="expand-col">
+          @if (row.kind === 'agrupamento') {
+            <button
+              mat-icon-button
+              type="button"
+              (click)="toggleExpansion(row); $event.stopPropagation()"
+              [matTooltip]="isExpanded(row) ? 'Recolher' : 'Expandir'"
+            >
+              <mat-icon>
+                {{ isExpanded(row) ? 'expand_more' : 'chevron_right' }}
+              </mat-icon>
+            </button>
+          }
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="localizacao">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Localização</th>
-        <td mat-cell *matCellDef="let element">
+
+        <td mat-cell *matCellDef="let row">
           <div class="cell-location">
-            <mat-icon>location_on</mat-icon>
-            <span>{{ element.localCampus }} - {{ element.ambienteLocal }}</span>
+            @if (row.kind === 'agrupamento') {
+              <mat-icon>folder</mat-icon>
+            } @else {
+              <mat-icon>location_on</mat-icon>
+            }
+
+            <div class="cell-main">
+              <span>{{ getLocalizacaoLabel(row) }}</span>
+
+              @if (row.kind === 'agrupamento') {
+                <small class="text-muted"> {{ getQuantidadeDeFilhos(row) }} chamado(s) </small>
+              }
+            </div>
           </div>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="demanda">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo de Demanda</th>
-        <td mat-cell *matCellDef="let element">
-          <span class="demand-desc">{{ element.descricao }}</span>
-          <span class="demand-cat">{{ element.tipoDemanda }}</span>
+
+        <td mat-cell *matCellDef="let row">
+          <div class="cell-id">
+            <strong>{{ getTipoDemandaLabel(row) }}</strong>
+            <small class="text-muted">{{ getDescricaoLabel(row) }}</small>
+          </div>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-        <td mat-cell *matCellDef="let element">
-          <span class="status-badge" [ngClass]="element.status | lowercase | slice: 0 : 4">
-            {{ element.status }}
+
+        <td mat-cell *matCellDef="let row">
+          <span class="status-badge" [ngClass]="getStatusClass(getStatusLabel(row))">
+            {{ getStatusLabel(row) }}
           </span>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="abertura">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Abertura</th>
-        <td mat-cell *matCellDef="let element">{{ element.criadoEm | date: 'dd MMM, HH:mm' }}</td>
+
+        <td mat-cell *matCellDef="let row">
+          {{ getAberturaLabel(row) | date: 'dd MMM, HH:mm' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="expandedDetail">
+        <td
+          mat-cell
+          *matCellDef="let row"
+          [attr.colspan]="displayedColumns.length"
+          class="detail-cell"
+        >
+          @if (row.kind === 'agrupamento' && isExpanded(row)) {
+            <div class="detail-wrapper">
+              <div class="filhos-tabela">
+                @for (filho of row.filhos; track filho.id ?? filho.criadoEm) {
+                  <div class="filho-row filho-agrupado">
+                    <div class="filho-cell expand-col child-marker-col">
+                      <mat-icon class="child-marker">subdirectory_arrow_right</mat-icon>
+                    </div>
+
+                    <div class="filho-cell">
+                      <div class="cell-location">
+                        <mat-icon>location_on</mat-icon>
+                        <div class="cell-main">
+                          <span>{{ filho.localCampus }} - {{ filho.ambienteLocal }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="filho-cell">
+                      <div class="cell-id">
+                        <strong>{{ filho.tipoDemanda }}</strong>
+                        <small class="text-muted">{{ filho.descricao }}</small>
+                      </div>
+                    </div>
+
+                    <div class="filho-cell">
+                      <div>
+                        <span class="status-badge" [ngClass]="getStatusClass(filho.status)">
+                          {{ filho.status }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="filho-cell">
+                      {{ filho.criadoEm | date: 'dd MMM, HH:mm' }}
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        class="element-row"
+        [class.group-row]="row.kind === 'agrupamento'"
+        [class.child-row]="row.kind === 'chamado' && row.chamado.agrupamentoId"
+      ></tr>
+
+      <tr
+        mat-row
+        *matRowDef="let row; columns: ['expandedDetail']; when: isGroupRow"
+        class="detail-row"
+      ></tr>
 
       <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell empty-state" colspan="4">Nenhum chamado encontrado.</td>
+        <td class="mat-cell empty-state" colspan="5">
+          Nenhum chamado encontrado com esses filtros.
+        </td>
       </tr>
     </table>
 
     <mat-paginator
-      [pageSizeOptions]="[5, 10, 25]"
+      [pageSizeOptions]="[10, 25, 50]"
       aria-label="Selecione a página de chamados"
     ></mat-paginator>
   </div>
