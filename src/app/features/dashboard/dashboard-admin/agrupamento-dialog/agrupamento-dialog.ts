@@ -1,6 +1,5 @@
-import { Component, Inject, inject } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // Adicionado para gerenciar o ngModel das checkboxes
 
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,7 +7,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 
 import { Chamado } from '../../../../core/modals/chamado';
-import { AgrupamentosService } from '../../../../core/services/agrupamento';
 
 export interface AgrupamentoDialogData {
   chamadoBase: Chamado;
@@ -18,50 +16,38 @@ export interface AgrupamentoDialogData {
 @Component({
   selector: 'app-agrupamento-dialog',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatCheckboxModule,
-    MatIconModule,
-  ],
+  imports: [CommonModule, MatDialogModule, MatButtonModule, MatCheckboxModule, MatIconModule],
   templateUrl: './agrupamento-dialog.html',
   styleUrl: './agrupamento-dialog.scss',
 })
 export class AgrupamentoDialogComponent {
-  private agrupamentosService = inject(AgrupamentosService);
-
-  // Mapeia o ID do chamado para um booleano indicando se está selecionado
-  selecionados: { [key: string]: boolean } = {};
-  carregando = false;
+  selecionados = new Set<string>();
 
   constructor(
     public dialogRef: MatDialogRef<AgrupamentoDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: AgrupamentoDialogData,
   ) {
-    // Por padrão, inicializa todos os candidatos marcados como true
-    this.data.chamadosParaAgrupar.forEach((c) => {
-      if (c.id) this.selecionados[c.id] = true;
-    });
+    for (const chamado of this.data.chamadosParaAgrupar) {
+      if (chamado.id) {
+        this.selecionados.add(chamado.id);
+      }
+    }
   }
 
-  async confirmarAgrupamento() {
-    const filhosSelecionados = this.data.chamadosParaAgrupar.filter(
-      (c) => c.id && this.selecionados[c.id],
-    );
-
-    // O grupo será composto pelo chamadoBase + os filhos selecionados
-    const todosOsChamadosDoGrupo = [this.data.chamadoBase, ...filhosSelecionados];
-
-    this.carregando = true;
-    try {
-      await this.agrupamentosService.criarAgrupamento(todosOsChamadosDoGrupo);
-      this.dialogRef.close(true);
-    } catch (error) {
-      console.error('Erro ao agrupar chamados:', error);
-    } finally {
-      this.carregando = false;
+  alternarSelecao(chamadoId: string, selecionado: boolean) {
+    if (selecionado) {
+      this.selecionados.add(chamadoId);
+      return;
     }
+
+    this.selecionados.delete(chamadoId);
+  }
+
+  estaSelecionado(chamadoId: string): boolean {
+    return this.selecionados.has(chamadoId);
+  }
+
+  confirmar() {
+    this.dialogRef.close([...this.selecionados]);
   }
 }

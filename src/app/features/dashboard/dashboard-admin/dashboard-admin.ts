@@ -25,8 +25,18 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 
-import { Chamado, TipoDemanda, LocalCampus, AmbienteLocal } from '../../../core/modals/chamado';
+import { finalize } from 'rxjs/operators';
+
+import {
+  Agrupamento,
+  Chamado,
+  TipoDemanda,
+  LocalCampus,
+  AmbienteLocal,
+} from '../../../core/modals/chamado';
+
 import { ConfigurarLocaisService } from '../../../core/services/configurar-locais';
+import { ChamadosService } from '../../../core/services/chamados';
 import { AgrupamentosService } from '../../../core/services/agrupamento';
 
 import { AgrupamentoDialogComponent } from './agrupamento-dialog/agrupamento-dialog';
@@ -40,6 +50,19 @@ interface FilterState {
   ambiente: string;
   cardFiltro: 'agrupamento' | 'alta' | 'triagem' | null;
 }
+
+type DashboardRow =
+  | {
+      kind: 'agrupamento';
+      key: string;
+      agrupamento: Agrupamento;
+      filhos: Chamado[];
+    }
+  | {
+      kind: 'chamado';
+      key: string;
+      chamado: Chamado;
+    };
 
 @Component({
   selector: 'app-dashboard-admin',
@@ -65,15 +88,16 @@ interface FilterState {
 })
 export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
   @Input() chamados: Chamado[] = [];
+  @Input() agrupamentos: Agrupamento[] = [];
 
   private dialog = inject(MatDialog);
   private configurarLocaisService = inject(ConfigurarLocaisService);
+  private chamadosService = inject(ChamadosService);
   private agrupamentosService = inject(AgrupamentosService);
 
-  dataSource = new MatTableDataSource<Chamado>();
+  dataSource = new MatTableDataSource<DashboardRow>();
 
-  displayedColumns: string[] = ['id', 'localizacao', 'demanda', 'status', 'acoes'];
-  expandedElement: Chamado | null = null;
+  displayedColumns: string[] = ['expand', 'id', 'localizacao', 'demanda', 'status', 'acoes'];
 
   countSugestoesAgrupamento = 0;
   countAltaPrioridade = 0;
@@ -90,11 +114,13 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
   };
 
   categoriasDisponiveis: string[] = [];
-  statusPossiveis: string[] = ['Aberto', 'Em Andamento', 'Fechado', 'Cancelado'];
+  statusPossiveis: string[] = ['Aberto', 'Em Execução', 'Fechado', 'Cancelado'];
   prioridadesDisponiveis: string[] = ['Baixa', 'Média', 'Alta', 'Crítica'];
 
   locaisDisponiveis: LocalCampus[] = [];
   ambientesDisponiveis: AmbienteLocal[] = [];
+
+  expandedRowKey: string | null = null;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -102,15 +128,14 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
   ngOnInit(): void {
     this.carregarTiposDemanda();
     this.carregarLocais();
+    this.configurarFiltroPersonalizado();
+    this.reconstruirTabela();
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['chamados'] && this.chamados) {
-      this.dataSource.data = this.chamados.filter(
-        (c) => !c.agrupamentoId || c.agrupamentoId === c.id,
-      );
+    if (changes['chamados'] || changes['agrupamentos']) {
+      this.reconstruirTabela();
       this.calcularContadores();
-      this.configurarFiltroPersonalizado();
     }
   }
 
@@ -118,21 +143,78 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
 
-    this.dataSource.sortingDataAccessor = (item: Chamado, property: string) => {
+    this.dataSource.sortingDataAccessor = (item: DashboardRow, property: string) => {
+      const chamado = item.kind === 'chamado' ? item.chamado : item.agrupamento;
+      const tituloAgrupamento =
+        item.kind === 'agrupamento' ? `agrupamento ${item.agrupamento.id}` : '';
+
       switch (property) {
-        case 'localizacao':
-          return `${item.localCampus}|${item.ambienteLocal}`.toLowerCase();
-        case 'demanda':
-          return item.tipoDemanda?.toLowerCase() ?? '';
-        case 'status':
-          return item.status?.toLowerCase();
+        case 'expand':
+          return item.kind === 'agrupamento' ? 1 : 0;
+
         case 'id':
-          return Number(item.id);
+          return item.kind === 'agrupamento'
+            ? tituloAgrupamento.toLowerCase()
+            : Number(chamado.id ?? 0);
+
+        case 'localizacao':
+          return `${chamado.localCampus}|${chamado.ambienteLocal}`.toLowerCase();
+
+        case 'demanda':
+          return item.kind === 'agrupamento'
+            ? `${item.agrupamento.tipoDemanda} ${item.agrupamento.descricoes.join(' ')}`.toLowerCase()
+            : (chamado.tipoDemanda?.toLowerCase() ?? '');
+
+        case 'status':
+          return chamado.status?.toLowerCase() ?? '';
+
         default:
-          return (item as any)[property];
+          return (chamado as any)[property];
       }
     };
   }
+
+  // =========================================================
+  // RECONSTRUÇÃO DA TABELA
+  // =========================================================
+
+  private reconstruirTabela() {
+    const rows: DashboardRow[] = [];
+    const chamadosAgrupados = new Set<string>();
+
+    for (const agrupamento of this.agrupamentos ?? []) {
+      const filhos = (this.chamados ?? []).filter((c) => c.agrupamentoId === agrupamento.id);
+
+      for (const filho of filhos) {
+        if (filho.id) chamadosAgrupados.add(filho.id);
+      }
+
+      rows.push({
+        kind: 'agrupamento',
+        key: `agr-${agrupamento.id}`,
+        agrupamento,
+        filhos,
+      });
+    }
+
+    for (const chamado of this.chamados ?? []) {
+      if (chamado.agrupamentoId) continue;
+      if (chamado.id && chamadosAgrupados.has(chamado.id)) continue;
+
+      rows.push({
+        kind: 'chamado',
+        key: `ch-${chamado.id}`,
+        chamado,
+      });
+    }
+
+    this.dataSource.data = rows;
+    this.aplicarFiltroAtual();
+  }
+
+  // =========================================================
+  // CARREGAMENTO DE FILTROS AUXILIARES
+  // =========================================================
 
   private carregarTiposDemanda() {
     this.configurarLocaisService.getTiposDemanda().subscribe((tipos: TipoDemanda[]) => {
@@ -146,9 +228,13 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
     });
   }
 
+  // =========================================================
+  // FILTROS
+  // =========================================================
+
   aplicarFiltroTexto(event: Event) {
     this.filtros.search = (event.target as HTMLInputElement).value;
-    this.atualizarFiltroDataSource();
+    this.aplicarFiltroAtual();
   }
 
   aplicarFiltroSelect(
@@ -156,142 +242,295 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
     valor: string,
   ) {
     this.filtros[tipo] = valor;
-    this.atualizarFiltroDataSource();
+    this.aplicarFiltroAtual();
   }
 
   selecionarLocal(localNome: string) {
     this.filtros.local = localNome;
     this.filtros.ambiente = '';
+
     const localSelecionado = this.locaisDisponiveis.find((l) => l.nome === localNome);
     this.ambientesDisponiveis = localSelecionado?.ambientes ?? [];
-    this.atualizarFiltroDataSource();
+
+    this.aplicarFiltroAtual();
   }
 
   toggleCardFilter(filtroCard: 'agrupamento' | 'alta' | 'triagem') {
     this.filtros.cardFiltro = this.filtros.cardFiltro === filtroCard ? null : filtroCard;
-    this.atualizarFiltroDataSource();
+    this.aplicarFiltroAtual();
   }
 
-  private atualizarFiltroDataSource() {
+  private aplicarFiltroAtual() {
     this.dataSource.filter = JSON.stringify(this.filtros);
+
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
   }
 
   private configurarFiltroPersonalizado() {
-    this.dataSource.filterPredicate = (data: Chamado, filterStr: string) => {
+    this.dataSource.filterPredicate = (row: DashboardRow, filterStr: string) => {
       const f: FilterState = JSON.parse(filterStr);
+
+      const textoBase =
+        row.kind === 'agrupamento'
+          ? [
+              row.agrupamento.id,
+              row.agrupamento.idGrupo,
+              row.agrupamento.localCampus,
+              row.agrupamento.ambienteLocal,
+              row.agrupamento.status,
+              row.agrupamento.prioridade,
+              row.agrupamento.tipoDemanda,
+              row.agrupamento.descricoes.join(' '),
+              row.filhos.map((c) => `${c.id} ${c.descricao} ${c.tipoDemanda}`).join(' '),
+            ].join(' ')
+          : [
+              row.chamado.id,
+              row.chamado.localCampus,
+              row.chamado.ambienteLocal,
+              row.chamado.descricao,
+              row.chamado.tipoDemanda,
+              row.chamado.status,
+              row.chamado.prioridade,
+              row.chamado.idGrupo,
+            ].join(' ');
+
       let match = true;
 
       if (f.search) {
-        const textToSearch = `${data.id}
-          ${data.localCampus}
-          ${data.ambienteLocal}
-          ${data.descricao}
-          ${data.tipoDemanda}`.toLowerCase();
-
-        if (!textToSearch.includes(f.search.toLowerCase())) {
+        if (!textoBase.toLowerCase().includes(f.search.toLowerCase())) {
           match = false;
         }
       }
 
-      if (f.categoria && data.tipoDemanda !== f.categoria) match = false;
-      if (f.prioridade && data.prioridade !== f.prioridade) match = false;
-      if (f.local && data.localCampus !== f.local) match = false;
-      if (f.ambiente && data.ambienteLocal !== f.ambiente) match = false;
-
-      if (f.cardFiltro === 'alta' && data.prioridade !== 'Alta' && data.prioridade !== 'Crítica') {
-        match = false;
+      if (f.categoria) {
+        if (row.kind === 'agrupamento') {
+          const matchCategoria = row.filhos.some((c) => c.tipoDemanda === f.categoria);
+          if (!matchCategoria) match = false;
+        } else if (row.chamado.tipoDemanda !== f.categoria) {
+          match = false;
+        }
       }
 
-      if (f.cardFiltro === 'triagem' && (data.atribuidoPara !== '' || data.status !== 'Aberto')) {
-        match = false;
+      if (f.prioridade) {
+        if (row.kind === 'agrupamento') {
+          if (row.agrupamento.prioridade !== f.prioridade) match = false;
+        } else if (row.chamado.prioridade !== f.prioridade) {
+          match = false;
+        }
+      }
+
+      if (f.local) {
+        if (row.kind === 'agrupamento') {
+          if (row.agrupamento.localCampus !== f.local) match = false;
+        } else if (row.chamado.localCampus !== f.local) {
+          match = false;
+        }
+      }
+
+      if (f.ambiente) {
+        if (row.kind === 'agrupamento') {
+          if (row.agrupamento.ambienteLocal !== f.ambiente) match = false;
+        } else if (row.chamado.ambienteLocal !== f.ambiente) {
+          match = false;
+        }
+      }
+
+      if (f.status) {
+        if (row.kind === 'agrupamento') {
+          if (row.agrupamento.status !== f.status) match = false;
+        } else if (row.chamado.status !== f.status) {
+          match = false;
+        }
+      }
+
+      if (f.cardFiltro === 'alta') {
+        const statusAlta =
+          row.kind === 'agrupamento'
+            ? row.agrupamento.prioridade === 'Alta' || row.agrupamento.prioridade === 'Crítica'
+            : row.chamado.prioridade === 'Alta' || row.chamado.prioridade === 'Crítica';
+
+        if (!statusAlta) match = false;
+      }
+
+      if (f.cardFiltro === 'triagem') {
+        const emTriagem =
+          row.kind === 'agrupamento'
+            ? row.agrupamento.status === 'Aberto' && row.agrupamento.atribuidoPara === ''
+            : row.chamado.status === 'Aberto' && row.chamado.atribuidoPara === '';
+
+        if (!emTriagem) match = false;
       }
 
       if (f.cardFiltro === 'agrupamento') {
-        match = match && this.temDuplicatas(data);
+        if (row.kind !== 'agrupamento') {
+          match = false;
+        } else if (row.filhos.length < 2) {
+          match = false;
+        }
       }
-
-      if (f.status && data.status !== f.status) match = false;
 
       return match;
     };
   }
 
+  // =========================================================
+  // CONTADORES
+  // =========================================================
+
   private calcularContadores() {
-    this.countAltaPrioridade = this.chamados.filter(
+    const chamadosBase = (this.chamados ?? []).filter((c) => !c.agrupamentoId);
+
+    this.countAltaPrioridade = chamadosBase.filter(
       (c) => c.prioridade === 'Alta' || c.prioridade === 'Crítica',
     ).length;
 
-    this.countAguardandoTriagem = this.chamados.filter(
+    this.countAguardandoTriagem = chamadosBase.filter(
       (c) => c.atribuidoPara === '' && c.status === 'Aberto',
     ).length;
 
-    const grupos = this.chamados
-      .filter((c) => c.status === 'Aberto' && !c.agrupamentoId)
-      .map((c) => c.idGrupo);
+    const gruposPorId = new Map<string, Chamado[]>();
 
-    const gruposDuplicados = grupos.filter((item, index) => grupos.indexOf(item) !== index);
+    for (const chamado of chamadosBase) {
+      if (chamado.status !== 'Aberto') continue;
+      const grupoAtual = gruposPorId.get(chamado.idGrupo) ?? [];
+      grupoAtual.push(chamado);
+      gruposPorId.set(chamado.idGrupo, grupoAtual);
+    }
 
-    this.countSugestoesAgrupamento = this.chamados.filter(
-      (c) => c.status === 'Aberto' && !c.agrupamentoId && gruposDuplicados.includes(c.idGrupo),
-    ).length;
+    const gruposComDuplicidade = [...gruposPorId.values()].filter((grupo) => grupo.length > 1);
+
+    this.countSugestoesAgrupamento = gruposComDuplicidade.filter((grupo) => {
+      const idGrupo = grupo[0]?.idGrupo;
+      return !this.agrupamentos.some((a) => a.idGrupo === idGrupo);
+    }).length;
   }
 
-  private temDuplicatas(chamado: Chamado): boolean {
-    if (chamado.agrupamentoId) return false;
-    return this.chamados.some(
-      (c) =>
-        c.idGrupo === chamado.idGrupo &&
-        c.id !== chamado.id &&
-        c.status === 'Aberto' &&
-        !c.agrupamentoId,
-    );
-  }
+  // =========================================================
+  // AGRUPAMENTO
+  // =========================================================
 
   getChamadosParaAgrupar(chamadoBase: Chamado): Chamado[] {
-    if (chamadoBase.agrupamentoId) return [];
-    return this.chamados.filter(
+    return (this.chamados ?? []).filter(
       (c) =>
-        chamadoBase.status === 'Aberto' &&
-        c.idGrupo === chamadoBase.idGrupo &&
         c.id !== chamadoBase.id &&
+        c.agrupamentoId === null &&
         c.status === 'Aberto' &&
-        !c.agrupamentoId,
+        c.idGrupo === chamadoBase.idGrupo,
     );
   }
 
-  getFilhosDoAgrupamento(paiId: string): Chamado[] {
-    return this.chamados.filter((c) => c.agrupamentoId === paiId && c.id !== paiId);
-  }
+  podeAgrupar(chamadoBase: Chamado): boolean {
+    const jaExisteAgrupamento = this.agrupamentos.some((a) => a.idGrupo === chamadoBase.idGrupo);
+    const candidatos = this.getChamadosParaAgrupar(chamadoBase);
 
-  async desfazerAgrupamento(paiId: string, event: Event) {
-    event.stopPropagation();
-    if (confirm('Tem certeza que deseja separar e reverter os chamados deste grupo?')) {
-      try {
-        await this.agrupamentosService.desfazerAgrupamento(paiId);
-      } catch (error) {
-        console.error('Erro ao desfazer agrupamento:', error);
-      }
-    }
+    return !jaExisteAgrupamento && candidatos.length > 0 && !chamadoBase.agrupamentoId;
   }
 
   abrirDialogAgrupamento(element: Chamado) {
+    if (!this.podeAgrupar(element)) {
+      return;
+    }
+
     const chamadosParaAgrupar = this.getChamadosParaAgrupar(element);
 
-    if (chamadosParaAgrupar.length > 0) {
-      const dialogRef = this.dialog.open(AgrupamentoDialogComponent, {
-        width: '600px',
-        data: {
-          chamadoBase: element,
-          chamadosParaAgrupar,
-        },
-      });
+    const ref = this.dialog.open(AgrupamentoDialogComponent, {
+      width: '680px',
+      data: {
+        chamadoBase: element,
+        chamadosParaAgrupar,
+      },
+    });
 
-      dialogRef.afterClosed().subscribe((confirmado) => {
-        if (confirmado) this.expandedElement = null;
-      });
+    ref.afterClosed().subscribe(async (idsSelecionados: string[] | undefined) => {
+      if (!idsSelecionados || idsSelecionados.length === 0) return;
+
+      const chamadosSelecionados = [
+        element,
+        ...this.chamados.filter((c) => idsSelecionados.includes(c.id ?? '')),
+      ];
+
+      try {
+        await this.agrupamentosService.criarAgrupamento(chamadosSelecionados);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+  }
+
+  async desfazerAgrupamento(row: DashboardRow) {
+    if (row.kind !== 'agrupamento' || !row.agrupamento.id) return;
+
+    const confirmar = window.confirm('Deseja desfazer este agrupamento?');
+    if (!confirmar) return;
+
+    try {
+      await this.agrupamentosService.desfazerAgrupamento(row.agrupamento.id);
+    } catch (error) {
+      console.error(error);
     }
+  }
+
+  async atualizarStatusAgrupamento(row: DashboardRow, novoStatus: Chamado['status']) {
+    if (row.kind !== 'agrupamento' || !row.agrupamento.id) return;
+
+    try {
+      await this.agrupamentosService.atualizarAgrupamento(row.agrupamento.id, {
+        status: novoStatus,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // =========================================================
+  // EXPANSÃO
+  // =========================================================
+
+  isGroupRow = (_: number, row: DashboardRow) => row.kind === 'agrupamento';
+
+  isExpanded(row: DashboardRow): boolean {
+    return this.expandedRowKey === row.key;
+  }
+
+  toggleExpansion(row: DashboardRow) {
+    if (row.kind !== 'agrupamento') return;
+    this.expandedRowKey = this.expandedRowKey === row.key ? null : row.key;
+  }
+
+  // =========================================================
+  // UTILITÁRIOS DE TEMPLATE
+  // =========================================================
+
+  trackByRow = (_: number, row: DashboardRow) => row.key;
+
+  getLinhaTitulo(row: DashboardRow): string {
+    if (row.kind === 'agrupamento') {
+      return `Agrupamento (${row.agrupamento.chamadosIds.length} chamados)`;
+    }
+
+    return `#${row.chamado.id}`;
+  }
+
+  getFilaDeFilhos(row: DashboardRow): Chamado[] {
+    return row.kind === 'agrupamento' ? row.filhos : [];
+  }
+
+  getQuantidadeParaBadge(row: DashboardRow): number {
+    if (row.kind !== 'chamado') return 0;
+
+    return this.getChamadosParaAgrupar(row.chamado).length;
+  }
+
+  async limparFiltroCard() {
+    this.filtros.cardFiltro = null;
+    this.aplicarFiltroAtual();
+  }
+
+  async abrirAgrupamentoExistente(row: DashboardRow) {
+    if (row.kind !== 'agrupamento' || !row.agrupamento.id) return;
+
+    await this.atualizarStatusAgrupamento(row, row.agrupamento.status);
   }
 }

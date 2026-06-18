@@ -177,6 +177,7 @@ export class AbrirChamado implements OnInit, OnDestroy {
       atribuidoParaNome: responsaveisSelecionados.map((u) => u.nome).join(', '),
 
       idGrupo,
+      agrupamentoId: null,
     };
 
     try {

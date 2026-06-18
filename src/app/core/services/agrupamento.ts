@@ -1,18 +1,31 @@
+import { TipoDemanda } from './../modals/chamado';
 import { Injectable, inject } from '@angular/core';
 import {
   Firestore,
   collection,
   doc,
+  getDoc,
+  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
   onSnapshot,
-  getDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  writeBatch,
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 
 import { ChamadosService } from './chamados';
-import { Chamado, Agrupamento } from '../modals/chamado';
+import {
+  Agrupamento,
+  Chamado,
+  ChamadoSnapshot,
+  PrioridadeChamado,
+  StatusChamado,
+} from '../modals/chamado';
 
 @Injectable({
   providedIn: 'root',
@@ -21,44 +34,115 @@ export class AgrupamentosService {
   private firestore = inject(Firestore);
   private chamadosService = inject(ChamadosService);
 
-  // ================================
-  // 1. CRIAR AGRUPAMENTO
-  // ================================
-  async criarAgrupamento(chamados: Chamado[]): Promise<string> {
-    const ref = collection(this.firestore, 'agrupamentos');
+  // =========================================================
+  // CONSULTAS
+  // =========================================================
 
-    const ids = chamados.map((c) => c.id!) as string[];
+  getAgrupamentos(): Observable<Agrupamento[]> {
+    return new Observable((observer) => {
+      const ref = collection(this.firestore, 'agrupamentos');
+      const q = query(ref, orderBy('criadoEm', 'desc'));
 
-    const agrupamento: Agrupamento = {
-      idGrupo: chamados[0]?.idGrupo ?? '',
-      chamadosIds: ids,
-      status: this.calcularStatus(chamados),
-      prioridade: this.calcularPrioridade(chamados),
+      const unsub = onSnapshot(
+        q,
+        (snap) => {
+          observer.next(
+            snap.docs.map((d) => ({
+              id: d.id,
+              ...d.data(),
+            })) as Agrupamento[],
+          );
+        },
+        (error) => observer.error(error),
+      );
 
-      atribuidoPara: '',
-      atribuidoParaNome: '',
-
-      localCampus: chamados[0]?.localCampus ?? '',
-      ambienteLocal: chamados[0]?.ambienteLocal ?? '',
-
-      descricoes: chamados.map((c) => c.descricao),
-
-      criadoEm: new Date().toISOString(),
-    };
-
-    const docRef = await addDoc(ref, agrupamento);
-
-    await this.sincronizarChamados(docRef.id, agrupamento);
-
-    return docRef.id;
+      return () => unsub();
+    });
   }
 
-  // ================================
-  // 2. SINCRONIZAR CHAMADOS
-  // ================================
-  private async sincronizarChamados(agrupamentoId: string, agrupamento: Agrupamento) {
-    for (const chamadoId of agrupamento.chamadosIds) {
-      await this.chamadosService.updateChamado(chamadoId, {
+  async getAgrupamentoPorId(agrupamentoId: string): Promise<Agrupamento | null> {
+    const ref = doc(this.firestore, `agrupamentos/${agrupamentoId}`);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) return null;
+
+    return {
+      id: snap.id,
+      ...(snap.data() as Agrupamento),
+    };
+  }
+
+  async existeAgrupamentoParaIdGrupo(idGrupo: string): Promise<boolean> {
+    const ref = collection(this.firestore, 'agrupamentos');
+    const q = query(ref, where('idGrupo', '==', idGrupo), limit(1));
+    const snap = await getDocs(q);
+
+    return !snap.empty;
+  }
+
+  async chamadoJaPertenceAAlgumAgrupamento(chamadoId: string): Promise<boolean> {
+    const chamado = await this.carregarChamado(chamadoId);
+    return !!chamado?.agrupamentoId;
+  }
+
+  // =========================================================
+  // CRIAÇÃO DO AGRUPAMENTO
+  // =========================================================
+
+  async criarAgrupamento(chamados: Chamado[]): Promise<string> {
+    const chamadosValidos = this.removerDuplicadosPorId(chamados);
+
+    if (chamadosValidos.length < 2) {
+      throw new Error('É necessário selecionar pelo menos 2 chamados para agrupar.');
+    }
+
+    const idGrupoBase = chamadosValidos[0].idGrupo;
+
+    if (!chamadosValidos.every((c) => c.idGrupo === idGrupoBase)) {
+      throw new Error('Todos os chamados do agrupamento precisam ter o mesmo idGrupo.');
+    }
+
+    const chamadosComId = chamadosValidos.filter((c) => !!c.id);
+
+    if (chamadosComId.length !== chamadosValidos.length) {
+      throw new Error('Todos os chamados precisam ter ID válido para serem agrupados.');
+    }
+
+    // Garante que nenhum deles já esteja em outro agrupamento
+    for (const chamado of chamadosComId) {
+      if (chamado.agrupamentoId) {
+        throw new Error(`O chamado #${chamado.id} já está em um agrupamento.`);
+      }
+    }
+
+    const agrupamentoRef = doc(collection(this.firestore, 'agrupamentos'));
+    const agrupamentoId = agrupamentoRef.id;
+
+    const snapshotMembros = chamadosComId.map((chamado) => this.criarSnapshotChamado(chamado));
+
+    const agrupamento: Agrupamento = {
+      id: agrupamentoId,
+      idGrupo: idGrupoBase,
+      localCampus: chamadosComId[0].localCampus,
+      ambienteLocal: chamadosComId[0].ambienteLocal,
+      status: this.calcularStatusInicial(chamadosComId),
+      prioridade: this.calcularPrioridadeInicial(chamadosComId),
+      atribuidoPara: this.calcularAtribuicaoInicial(chamadosComId).uid,
+      atribuidoParaNome: this.calcularAtribuicaoInicial(chamadosComId).nome,
+      chamadosIds: chamadosComId.map((c) => c.id!),
+      membros: snapshotMembros,
+      tipoDemanda: chamadosComId[0].tipoDemanda,
+      descricoes: chamadosComId.map((c) => c.descricao),
+      criadoEm: new Date().toISOString(),
+      atualizadoEm: new Date().toISOString(),
+      ativo: true,
+    };
+
+    const batch = writeBatch(this.firestore);
+    batch.set(agrupamentoRef, agrupamento);
+
+    for (const chamado of chamadosComId) {
+      batch.update(doc(this.firestore, `chamados/${chamado.id}`), {
         agrupamentoId,
         status: agrupamento.status,
         prioridade: agrupamento.prioridade,
@@ -66,135 +150,293 @@ export class AgrupamentosService {
         atribuidoParaNome: agrupamento.atribuidoParaNome,
       });
     }
+
+    await batch.commit();
+
+    return agrupamentoId;
   }
 
-  // ================================
-  // 3. ATUALIZAR AGRUPAMENTO (SYNC TOTAL)
-  // ================================
-  async atualizarAgrupamento(agrupamentoId: string, dados: Partial<Agrupamento>): Promise<void> {
+  // =========================================================
+  // ATUALIZAÇÃO DO AGRUPAMENTO
+  // =========================================================
+
+  async atualizarAgrupamento(
+    agrupamentoId: string,
+    dados: Partial<
+      Pick<
+        Agrupamento,
+        | 'status'
+        | 'prioridade'
+        | 'atribuidoPara'
+        | 'atribuidoParaNome'
+        | 'localCampus'
+        | 'ambienteLocal'
+      >
+    >,
+  ): Promise<void> {
     const ref = doc(this.firestore, `agrupamentos/${agrupamentoId}`);
-
     const snap = await getDoc(ref);
-    if (!snap.exists()) return;
 
-    const atual = snap.data() as Agrupamento;
+    if (!snap.exists()) {
+      throw new Error('Agrupamento não encontrado.');
+    }
+
+    const atual = {
+      id: snap.id,
+      ...(snap.data() as Agrupamento),
+    };
 
     const atualizado: Agrupamento = {
       ...atual,
       ...dados,
+      atualizadoEm: new Date().toISOString(),
     };
 
-    await updateDoc(ref, dados);
-
-    await this.sincronizarChamados(agrupamentoId, atualizado);
-  }
-
-  // ================================
-  // 4. ADICIONAR CHAMADO AO AGRUPAMENTO
-  // ================================
-  async adicionarChamado(agrupamentoId: string, chamado: Chamado): Promise<void> {
-    const ref = doc(this.firestore, `agrupamentos/${agrupamentoId}`);
-
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return;
-
-    const agrupamento = snap.data() as Agrupamento;
-
-    const novosIds = [...agrupamento.chamadosIds, chamado.id!];
-
-    await updateDoc(ref, {
-      chamadosIds: novosIds,
-      descricoes: [...agrupamento.descricoes, chamado.descricao],
+    const batch = writeBatch(this.firestore);
+    batch.update(ref, {
+      ...dados,
+      atualizadoEm: atualizado.atualizadoEm,
     });
 
-    await this.chamadosService.updateChamado(chamado.id!, {
+    for (const chamadoId of atualizado.chamadosIds) {
+      batch.update(doc(this.firestore, `chamados/${chamadoId}`), {
+        ...(dados.status ? { status: dados.status } : {}),
+        ...(dados.prioridade ? { prioridade: dados.prioridade } : {}),
+        ...(dados.atribuidoPara ? { atribuidoPara: dados.atribuidoPara } : {}),
+        ...(dados.atribuidoParaNome ? { atribuidoParaNome: dados.atribuidoParaNome } : {}),
+      });
+    }
+
+    await batch.commit();
+  }
+
+  // =========================================================
+  // ADICIONAR CHAMADO AO AGRUPAMENTO
+  // =========================================================
+
+  async adicionarChamado(agrupamentoId: string, chamadoId: string): Promise<void> {
+    const agrupRef = doc(this.firestore, `agrupamentos/${agrupamentoId}`);
+    const chamadoRef = doc(this.firestore, `chamados/${chamadoId}`);
+
+    const [agrupSnap, chamadoSnap] = await Promise.all([getDoc(agrupRef), getDoc(chamadoRef)]);
+
+    if (!agrupSnap.exists()) {
+      throw new Error('Agrupamento não encontrado.');
+    }
+
+    if (!chamadoSnap.exists()) {
+      throw new Error('Chamado não encontrado.');
+    }
+
+    const agrupamento = {
+      id: agrupSnap.id,
+      ...(agrupSnap.data() as Agrupamento),
+    };
+
+    const chamado = {
+      id: chamadoSnap.id,
+      ...(chamadoSnap.data() as Chamado),
+    } as Chamado;
+
+    if (chamado.agrupamentoId) {
+      throw new Error(`O chamado #${chamado.id} já pertence a outro agrupamento.`);
+    }
+
+    if (chamado.idGrupo !== agrupamento.idGrupo) {
+      throw new Error('Só é possível adicionar chamados com o mesmo idGrupo.');
+    }
+
+    if (agrupamento.chamadosIds.includes(chamadoId)) {
+      return;
+    }
+
+    const novosChamadosIds = [...agrupamento.chamadosIds, chamadoId];
+    const novosMembros = [...agrupamento.membros, this.criarSnapshotChamado(chamado)];
+    const novosTipos = [...new Set([...agrupamento.tipoDemanda, chamado.tipoDemanda])];
+    const novasDescricoes = [...agrupamento.descricoes, chamado.descricao];
+
+    const batch = writeBatch(this.firestore);
+    batch.update(agrupRef, {
+      chamadosIds: novosChamadosIds,
+      membros: novosMembros,
+      tiposDemanda: novosTipos,
+      descricoes: novasDescricoes,
+      atualizadoEm: new Date().toISOString(),
+    });
+
+    batch.update(chamadoRef, {
       agrupamentoId,
       status: agrupamento.status,
       prioridade: agrupamento.prioridade,
       atribuidoPara: agrupamento.atribuidoPara,
       atribuidoParaNome: agrupamento.atribuidoParaNome,
     });
+
+    await batch.commit();
   }
 
-  // ================================
-  // 5. REMOVER CHAMADO DO AGRUPAMENTO
-  // ================================
-  async removerChamado(agrupamentoId: string, chamado: Chamado): Promise<void> {
-    const ref = doc(this.firestore, `agrupamentos/${agrupamentoId}`);
+  // =========================================================
+  // REMOVER CHAMADO DO AGRUPAMENTO
+  // =========================================================
 
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return;
+  async removerChamado(agrupamentoId: string, chamadoId: string): Promise<void> {
+    const agrupRef = doc(this.firestore, `agrupamentos/${agrupamentoId}`);
+    const snap = await getDoc(agrupRef);
 
-    const agrupamento = snap.data() as Agrupamento;
+    if (!snap.exists()) {
+      throw new Error('Agrupamento não encontrado.');
+    }
 
-    const novosIds = agrupamento.chamadosIds.filter((id) => id !== chamado.id);
+    const agrupamento = {
+      id: snap.id,
+      ...(snap.data() as Agrupamento),
+    };
 
-    const novasDescricoes = agrupamento.descricoes.filter(
-      (d, idx) => agrupamento.chamadosIds[idx] !== chamado.id,
-    );
+    const membroRemovido = agrupamento.membros.find((m) => m.chamadoId === chamadoId);
 
-    await updateDoc(ref, {
-      chamadosIds: novosIds,
-      descricoes: novasDescricoes,
+    if (!membroRemovido) {
+      throw new Error('O chamado informado não pertence a este agrupamento.');
+    }
+
+    const membrosRestantes = agrupamento.membros.filter((m) => m.chamadoId !== chamadoId);
+    const chamadosIdsRestantes = agrupamento.chamadosIds.filter((id) => id !== chamadoId);
+
+    // Se sobrar menos de 2 membros, o agrupamento deixa de fazer sentido.
+    // Então desfazemos tudo e restauramos o estado original de cada chamado.
+    if (membrosRestantes.length < 2) {
+      await this.desfazerAgrupamento(agrupamentoId);
+      return;
+    }
+
+    const batch = writeBatch(this.firestore);
+
+    batch.update(agrupRef, {
+      chamadosIds: chamadosIdsRestantes,
+      membros: membrosRestantes,
+      tiposDemanda: [...new Set(membrosRestantes.map((m) => m.tipoDemanda))],
+      descricoes: membrosRestantes.map((m) => m.descricao),
+      atualizadoEm: new Date().toISOString(),
     });
 
-    await this.chamadosService.updateChamado(chamado.id!, {
-      agrupamentoId: null as any,
+    batch.update(doc(this.firestore, `chamados/${chamadoId}`), {
+      agrupamentoId: null,
+      status: membroRemovido.status,
+      prioridade: membroRemovido.prioridade,
+      atribuidoPara: membroRemovido.atribuidoPara,
+      atribuidoParaNome: membroRemovido.atribuidoParaNome,
     });
+
+    await batch.commit();
   }
 
-  // ================================
-  // 6. DESFAZER AGRUPAMENTO
-  // ================================
+  // =========================================================
+  // DESFAZER AGRUPAMENTO
+  // =========================================================
+
   async desfazerAgrupamento(agrupamentoId: string): Promise<void> {
-    const ref = doc(this.firestore, `agrupamentos/${agrupamentoId}`);
+    const agrupRef = doc(this.firestore, `agrupamentos/${agrupamentoId}`);
+    const snap = await getDoc(agrupRef);
 
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return;
+    if (!snap.exists()) {
+      return;
+    }
 
-    const agrupamento = snap.data() as Agrupamento;
+    const agrupamento = {
+      id: snap.id,
+      ...(snap.data() as Agrupamento),
+    };
 
-    for (const chamadoId of agrupamento.chamadosIds) {
-      await this.chamadosService.updateChamado(chamadoId, {
-        agrupamentoId: null as any,
+    const batch = writeBatch(this.firestore);
+
+    for (const membro of agrupamento.membros) {
+      batch.update(doc(this.firestore, `chamados/${membro.chamadoId}`), {
+        agrupamentoId: null,
+        status: membro.status,
+        prioridade: membro.prioridade,
+        atribuidoPara: membro.atribuidoPara,
+        atribuidoParaNome: membro.atribuidoParaNome,
       });
     }
 
-    await deleteDoc(ref);
+    batch.delete(agrupRef);
+
+    await batch.commit();
   }
 
-  // ================================
-  // 7. LISTAR AGRUPAMENTOS
-  // ================================
-  getAgrupamentos(): Observable<Agrupamento[]> {
-    return new Observable((observer) => {
-      const ref = collection(this.firestore, 'agrupamentos');
+  // =========================================================
+  // HELPERS
+  // =========================================================
 
-      const unsub = onSnapshot(ref, (snap) => {
-        observer.next(
-          snap.docs.map((d) => ({
-            id: d.id,
-            ...d.data(),
-          })) as Agrupamento[],
-        );
-      });
+  private async carregarChamado(chamadoId: string): Promise<Chamado | null> {
+    const ref = doc(this.firestore, `chamados/${chamadoId}`);
+    const snap = await getDoc(ref);
 
-      return () => unsub();
-    });
+    if (!snap.exists()) return null;
+
+    return {
+      id: snap.id,
+      ...(snap.data() as Chamado),
+    };
   }
 
-  // ================================
-  // 8. HELPERS
-  // ================================
-  private calcularStatus(chamados: Chamado[]): Agrupamento['status'] {
-    return chamados.some((c) => c.status === 'Em Execução') ? 'Em Execução' : 'Aberto';
+  private criarSnapshotChamado(chamado: Chamado): ChamadoSnapshot {
+    return {
+      chamadoId: chamado.id!,
+      idGrupo: chamado.idGrupo,
+      localCampus: chamado.localCampus,
+      ambienteLocal: chamado.ambienteLocal,
+      tipoDemanda: chamado.tipoDemanda,
+      descricao: chamado.descricao,
+      canalAbertura: chamado.canalAbertura,
+      status: chamado.status,
+      prioridade: chamado.prioridade,
+      criadoPor: chamado.criadoPor,
+      criadoPorNome: chamado.criadoPorNome,
+      criadoEm: chamado.criadoEm,
+      atribuidoPara: chamado.atribuidoPara,
+      atribuidoParaNome: chamado.atribuidoParaNome,
+    };
   }
 
-  private calcularPrioridade(chamados: Chamado[]): Agrupamento['prioridade'] {
-    const ordem = ['Baixa', 'Média', 'Alta', 'Crítica'];
+  private removerDuplicadosPorId(chamados: Chamado[]): Chamado[] {
+    const mapa = new Map<string, Chamado>();
 
-    return chamados.sort((a, b) => ordem.indexOf(b.prioridade) - ordem.indexOf(a.prioridade))[0]
-      .prioridade;
+    for (const chamado of chamados) {
+      if (!chamado.id) continue;
+      mapa.set(chamado.id, chamado);
+    }
+
+    return [...mapa.values()];
+  }
+
+  private calcularStatusInicial(chamados: Chamado[]): StatusChamado {
+    if (chamados.some((c) => c.status === 'Em Execução')) return 'Em Execução';
+    if (chamados.some((c) => c.status === 'Aberto')) return 'Aberto';
+    if (chamados.some((c) => c.status === 'Fechado')) return 'Fechado';
+    return 'Cancelado';
+  }
+
+  private calcularPrioridadeInicial(chamados: Chamado[]): PrioridadeChamado {
+    const ordem: PrioridadeChamado[] = ['Baixa', 'Média', 'Alta', 'Crítica'];
+
+    return chamados.reduce((acumulado, atual) => {
+      return ordem.indexOf(atual.prioridade) > ordem.indexOf(acumulado.prioridade)
+        ? atual
+        : acumulado;
+    }).prioridade;
+  }
+
+  private calcularAtribuicaoInicial(chamados: Chamado[]): { uid: string; nome: string } {
+    const chamadoComResponsavel = chamados.find((c) => !!c.atribuidoPara);
+
+    if (chamadoComResponsavel) {
+      return {
+        uid: chamadoComResponsavel.atribuidoPara,
+        nome: chamadoComResponsavel.atribuidoParaNome,
+      };
+    }
+
+    return { uid: '', nome: '' };
   }
 
   getChamadosDoAgrupamento(chamados: Chamado[], agrupamentoId: string): Chamado[] {

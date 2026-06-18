@@ -37,6 +37,7 @@ export interface Chamado {
   atribuidoPara: string;
   atribuidoParaNome: string;
   idGrupo: string;
+
   agrupamentoId: string | null;
 }
 
@@ -48,9 +49,30 @@ export interface Nota {
   criadoEm: string;
 }
 
+export interface ChamadoSnapshot {
+  chamadoId: string;
+  idGrupo: string;
+  localCampus: string;
+  ambienteLocal: string;
+  tipoDemanda: string;
+  descricao: string;
+  canalAbertura: 'formulario' | 'qrcode';
+  status: StatusChamado;
+  prioridade: PrioridadeChamado;
+  criadoPor: string;
+  criadoPorNome: string;
+  criadoEm: string;
+  atribuidoPara: string;
+  atribuidoParaNome: string;
+}
+
 export interface Agrupamento {
   id?: string;
+
   idGrupo: string;
+
+  localCampus: string;
+  ambienteLocal: string;
 
   status: StatusChamado;
   prioridade: PrioridadeChamado;
@@ -58,11 +80,24 @@ export interface Agrupamento {
   atribuidoPara: string;
   atribuidoParaNome: string;
 
-  localCampus: string;
-  ambienteLocal: string;
-
   chamadosIds: string[];
 
+  membros: ChamadoSnapshot[];
+
+  tipoDemanda: string;
   descricoes: string[];
+
   criadoEm: string;
+  atualizadoEm: string;
+  ativo: boolean;
 }
+
+export type DashboardItem =
+  | {
+      kind: 'chamado';
+      chamado: Chamado;
+    }
+  | {
+      kind: 'agrupamento';
+      agrupamento: Agrupamento;
+    };
