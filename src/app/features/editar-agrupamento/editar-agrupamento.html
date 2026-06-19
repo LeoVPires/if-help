@@ -45,7 +45,7 @@
       <div class="main-column">
         <mat-card appearance="outlined" class="info-card">
           <mat-card-header>
-            <mat-card-title>
+            <mat-card-title class="titulo">
               <mat-icon>assignment</mat-icon>
               Informações do Agrupamento
             </mat-card-title>
@@ -119,7 +119,7 @@
 
         <mat-card appearance="outlined" class="solicitante-card">
           <mat-card-header>
-            <mat-card-title>
+            <mat-card-title class="titulo">
               <mat-icon>groups</mat-icon>
               Chamados do Agrupamento
             </mat-card-title>
@@ -131,7 +131,9 @@
                 <div class="member-row">
                   <div class="member-main">
                     <strong>#{{ membro.chamadoId }}</strong>
-                    <p>{{ membro.criadoPorNome }}</p>
+                    <p>Aberto por: {{ membro.criadoPorNome }}</p>
+                    <p>{{ membro.descricao }}</p>
+                    <span class="data">{{ membro.criadoEm | date: 'HH:mm - dd/MM/yyyy' }}</span>
                   </div>
 
                   <button
@@ -172,7 +174,7 @@
       <div class="side-column">
         <mat-card appearance="outlined" class="notes-card">
           <mat-card-header>
-            <mat-card-title>
+            <mat-card-title class="titulo">
               <mat-icon>chat_bubble_outline</mat-icon>
               Notas do Agrupamento e dos Chamados
             </mat-card-title>
