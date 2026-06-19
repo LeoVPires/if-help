@@ -25,6 +25,7 @@ import {
   ChamadoSnapshot,
   PrioridadeChamado,
   StatusChamado,
+  Nota,
 } from '../modals/chamado';
 
 @Injectable({
@@ -193,23 +194,29 @@ export class AgrupamentosService {
     };
 
     const batch = writeBatch(this.firestore);
+
     batch.update(ref, {
       ...dados,
       atualizadoEm: atualizado.atualizadoEm,
     });
 
     for (const chamadoId of atualizado.chamadosIds) {
-      batch.update(doc(this.firestore, `chamados/${chamadoId}`), {
-        ...(dados.status ? { status: dados.status } : {}),
-        ...(dados.prioridade ? { prioridade: dados.prioridade } : {}),
-        ...(dados.atribuidoPara ? { atribuidoPara: dados.atribuidoPara } : {}),
-        ...(dados.atribuidoParaNome ? { atribuidoParaNome: dados.atribuidoParaNome } : {}),
-      });
+      const patchChamado: Partial<Chamado> = {};
+
+      if (dados.status !== undefined) patchChamado.status = dados.status;
+      if (dados.prioridade !== undefined) patchChamado.prioridade = dados.prioridade;
+      if (dados.atribuidoPara !== undefined) patchChamado.atribuidoPara = dados.atribuidoPara;
+      if (dados.atribuidoParaNome !== undefined) {
+        patchChamado.atribuidoParaNome = dados.atribuidoParaNome;
+      }
+      if (dados.localCampus !== undefined) patchChamado.localCampus = dados.localCampus;
+      if (dados.ambienteLocal !== undefined) patchChamado.ambienteLocal = dados.ambienteLocal;
+
+      batch.update(doc(this.firestore, `chamados/${chamadoId}`), patchChamado);
     }
 
     await batch.commit();
   }
-
   // =========================================================
   // ADICIONAR CHAMADO AO AGRUPAMENTO
   // =========================================================
@@ -343,7 +350,6 @@ export class AgrupamentosService {
       id: snap.id,
       ...(snap.data() as Agrupamento),
     };
-
     const batch = writeBatch(this.firestore);
 
     for (const membro of agrupamento.membros) {
@@ -355,6 +361,14 @@ export class AgrupamentosService {
         atribuidoParaNome: membro.atribuidoParaNome,
       });
     }
+
+    const notasSnap = await getDocs(
+      collection(this.firestore, `agrupamentos/${agrupamentoId}/notas`),
+    );
+
+    notasSnap.forEach((notaDoc) => {
+      batch.delete(notaDoc.ref);
+    });
 
     batch.delete(agrupRef);
 
@@ -439,5 +453,42 @@ export class AgrupamentosService {
 
   getChamadosDoAgrupamento(chamados: Chamado[], agrupamentoId: string): Chamado[] {
     return chamados.filter((c) => c.agrupamentoId === agrupamentoId);
+  }
+
+  // =========================================================
+  // NOTAS
+  // =========================================================
+
+  getNotasAgrupamento(agrupamentoId: string): Observable<Nota[]> {
+    return new Observable((observer) => {
+      const notasRef = collection(this.firestore, `agrupamentos/${agrupamentoId}/notas`);
+      const q = query(notasRef, orderBy('criadoEm', 'desc'));
+
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          observer.next(
+            snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            })) as Nota[],
+          );
+        },
+        (error) => observer.error(error),
+      );
+
+      return () => unsubscribe();
+    });
+  }
+
+  async addNotaAgrupamento(agrupamentoId: string, nota: Nota): Promise<any> {
+    const notasCollection = collection(this.firestore, `agrupamentos/${agrupamentoId}/notas`);
+
+    return addDoc(notasCollection, {
+      autorNome: nota.autorNome,
+      autorFuncao: nota.autorFuncao,
+      texto: nota.texto,
+      criadoEm: new Date().toISOString(),
+    });
   }
 }

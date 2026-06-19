@@ -1,0 +1,355 @@
+.page-wrapper {
+  padding: 24px;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.left-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.back-btn {
+  margin-top: 4px;
+}
+
+.title-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--mat-sys-on-surface);
+  }
+}
+
+.timestamp {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.9rem;
+}
+
+.right-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.status-indicator {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.status-indicator.aberto {
+  background: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
+  color: var(--mat-sys-primary);
+}
+
+.status-indicator.andamento {
+  background: color-mix(in srgb, var(--mat-sys-tertiary) 15%, transparent);
+  color: var(--mat-sys-tertiary);
+}
+
+.status-indicator.fechado {
+  background: color-mix(in srgb, var(--mat-sys-error) 10%, transparent);
+  color: var(--mat-sys-error);
+}
+
+/* =========================
+   PRIORIDADE
+========================= */
+
+.badge-priority {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+.badge-priority.baixa {
+  color: var(--mat-sys-primary);
+}
+
+.badge-priority.media {
+  color: var(--mat-sys-tertiary);
+}
+
+.badge-priority.alta {
+  color: var(--mat-sys-error);
+}
+
+.badge-priority.critica,
+.badge-priority.crítica {
+  color: var(--mat-sys-error);
+  font-weight: 700;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(350px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.main-column,
+.side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.titulo {
+  padding-bottom: 10px;
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.info-card,
+.solicitante-card,
+.notes-card {
+  border-radius: 20px;
+}
+
+mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--mat-sys-on-surface);
+}
+
+/* =========================
+   FORMULÁRIO
+========================= */
+
+.fields-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  mat-form-field {
+    flex: 1;
+    min-width: 220px;
+  }
+}
+
+.full-width,
+.w-100 {
+  width: 100%;
+}
+
+.text-area-field {
+  margin-top: 12px;
+}
+
+/* =========================
+   CHAMADOS AGRUPADOS
+========================= */
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 14px;
+  border-radius: 14px;
+
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+.member-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .data {
+    font-size: smaller;
+  }
+
+  strong {
+    color: var(--mat-sys-primary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+/* =========================
+   NOTAS
+========================= */
+
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  max-height: 800px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.note-box {
+  padding: 14px;
+  border-radius: 16px;
+
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+.note-source {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--mat-sys-primary);
+  margin-bottom: 8px;
+}
+
+.note-text {
+  margin: 0;
+  color: var(--mat-sys-on-surface);
+  line-height: 1.5;
+}
+
+.note-meta {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* =========================
+   NOVA NOTA
+========================= */
+
+.add-note-box {
+  margin-top: 20px;
+}
+
+.add-note-btn {
+  width: 100%;
+}
+
+/* =========================
+   AÇÕES
+========================= */
+
+.form-actions-bar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.save-all-btn {
+  min-width: 280px;
+  height: 48px;
+}
+
+/* =========================
+   UTILITÁRIOS
+========================= */
+
+.text-muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
+
+@media (max-width: 1200px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .notes-list {
+    max-height: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-wrapper {
+    padding: 16px;
+  }
+
+  .detail-header {
+    flex-direction: column;
+  }
+
+  .left-header {
+    width: 100%;
+  }
+
+  .right-header {
+    width: 100%;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .fields-row {
+    flex-direction: column;
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+
+  .title-row h1 {
+    font-size: 1.5rem;
+  }
+
+  .save-all-btn {
+    width: 100%;
+  }
+}
