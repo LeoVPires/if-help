@@ -5,6 +5,7 @@ import { Publico } from './layouts/publico/publico';
 import { AbrirChamado } from './features/abrir-chamado/abrir-chamado';
 import { Dashboard } from './features/dashboard/dashboard';
 import { EditarChamado } from './features/editar-chamado/editar-chamado';
+import { EditarAgrupamento } from './features/editar-agrupamento/editar-agrupamento';
 import { MeusChamados } from './features/meus-chamados/meus-chamados';
 import { homeGuard } from './core/guards/home-guard';
 import { authGuard } from './core/guards/auth-guard';
@@ -48,6 +49,10 @@ export const routes: Routes = [
       {
         path: 'chamado/editar/:id',
         component: EditarChamado,
+      },
+      {
+        path: 'agrupamento/editar/:id',
+        component: EditarAgrupamento,
       },
       {
         path: 'chamado/meus',

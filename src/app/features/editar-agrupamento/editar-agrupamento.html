@@ -1,0 +1,224 @@
+@if (!isLoading) {
+  <div class="page-wrapper">
+    <header class="detail-header">
+      <div class="left-header">
+        <button mat-icon-button (click)="voltar()" class="back-btn">
+          <mat-icon>keyboard_backspace</mat-icon>
+        </button>
+
+        <div class="title-meta">
+          <div class="title-row">
+            <h1>Agrupamento #{{ agrupamentoId }}</h1>
+
+            <span class="status-indicator" [ngClass]="statusControl?.value | lowercase">
+              {{ statusControl?.value }}
+            </span>
+          </div>
+
+          <p class="timestamp">
+            Registrado em: {{ agrupamentoAtual?.criadoEm | date: 'dd/MM/yyyy às HH:mm' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="right-header">
+        <div class="badge-priority" [ngClass]="prioridadeControl?.value | lowercase">
+          <mat-icon>outlined_flag</mat-icon>
+          Prioridade: {{ prioridadeControl?.value }}
+        </div>
+
+        @if (agrupamentoAtual?.status !== 'Fechado') {
+          <button mat-stroked-button color="warn" (click)="fecharAgrupamento()">
+            <mat-icon>lock</mat-icon>
+            Fechar agrupamento
+          </button>
+        }
+
+        <button mat-flat-button [color]="isEditing ? 'accent' : 'primary'" (click)="toggleEdit()">
+          <mat-icon>{{ isEditing ? 'close' : 'edit' }}</mat-icon>
+          {{ isEditing ? 'Cancelar Edição' : 'Editar agrupamento' }}
+        </button>
+      </div>
+    </header>
+
+    <form [formGroup]="agrupamentoForm" (ngSubmit)="salvarAlteracoes()" class="content-grid">
+      <div class="main-column">
+        <mat-card appearance="outlined" class="info-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>assignment</mat-icon>
+              Informações do Agrupamento
+            </mat-card-title>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="fields-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Local / Campus</mat-label>
+                <input matInput formControlName="localCampus" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Ambiente</mat-label>
+                <input matInput formControlName="ambienteLocal" />
+              </mat-form-field>
+            </div>
+
+            <div class="fields-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Tipo de Demanda</mat-label>
+                <input matInput formControlName="tipoDemanda" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Prioridade</mat-label>
+                <mat-select formControlName="prioridade">
+                  @for (p of prioridadeOpcoes; track p) {
+                    <mat-option [value]="p">{{ p }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Status</mat-label>
+                <mat-select formControlName="status">
+                  @for (s of statusOpcoes; track s) {
+                    <mat-option [value]="s">{{ s }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="fields-row">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Responsável Atribuído</mat-label>
+
+                <mat-select formControlName="atribuidoPara">
+                  <mat-option value=""><em>Nenhum responsável (Deixar em Aberto)</em></mat-option>
+
+                  @for (tecnico of listaTecnicos; track tecnico.id) {
+                    <mat-option [value]="tecnico.id">
+                      {{ tecnico.nome }} ({{ tecnico.role | uppercase }})
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width text-area-field">
+              <mat-label>Nova observação</mat-label>
+              <textarea
+                matInput
+                rows="5"
+                formControlName="novaNota"
+                placeholder="Escreva uma justificativa ou observação técnica..."
+              ></textarea>
+            </mat-form-field>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card appearance="outlined" class="solicitante-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>groups</mat-icon>
+              Chamados do Agrupamento
+            </mat-card-title>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="members-list">
+              @for (membro of chamadosDoAgrupamento; track membro.chamadoId) {
+                <div class="member-row">
+                  <div class="member-main">
+                    <strong>#{{ membro.chamadoId }}</strong>
+                    <p>{{ membro.criadoPorNome }}</p>
+                  </div>
+
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    type="button"
+                    matTooltip="Desagrupar chamado"
+                    (click)="desagruparChamado(membro)"
+                  >
+                    <mat-icon>call_split</mat-icon>
+                  </button>
+                </div>
+              } @empty {
+                <p class="text-muted p-2 text-center">
+                  Não há chamados vinculados a este agrupamento.
+                </p>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        @if (isEditing) {
+          <div class="form-actions-bar">
+            <button
+              mat-flat-button
+              color="primary"
+              type="submit"
+              class="save-all-btn"
+              [disabled]="agrupamentoForm.invalid"
+            >
+              <mat-icon>save</mat-icon>
+              Salvar Alterações do Agrupamento
+            </button>
+          </div>
+        }
+      </div>
+
+      <div class="side-column">
+        <mat-card appearance="outlined" class="notes-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>chat_bubble_outline</mat-icon>
+              Notas do Agrupamento e dos Chamados
+            </mat-card-title>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="notes-list">
+              @for (nota of notasExibidas; track nota.id ?? nota.criadoEm) {
+                <div class="note-box">
+                  <div class="note-source">{{ nota.origemLabel }}</div>
+
+                  <p class="note-text" style="white-space: pre-line">{{ nota.texto }}</p>
+
+                  <div class="note-meta">
+                    — {{ nota.autorNome }} ({{ nota.autorFuncao }}),
+                    {{ nota.criadoEm | date: 'dd/MM HH:mm' }}
+                  </div>
+                </div>
+              } @empty {
+                <p class="text-muted p-2 text-center">
+                  Nenhuma nota registrada para este agrupamento.
+                </p>
+              }
+            </div>
+
+            <div class="add-note-box">
+              <button
+                mat-stroked-button
+                type="button"
+                class="add-note-btn"
+                (click)="adicionarNotaAvulsa()"
+              >
+                <mat-icon>add</mat-icon>
+                Registrar Apenas Nota
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </form>
+  </div>
+} @else {
+  <div
+    class="loading-box d-flex flex-column justify-content-center align-items-center style-loading"
+    style="min-height: 300px"
+  >
+    <p>Carregando informações do agrupamento...</p>
+  </div>
+}
