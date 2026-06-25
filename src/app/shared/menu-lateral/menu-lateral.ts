@@ -57,6 +57,12 @@ export class MenuLateral {
     },
   ]);
 
+  menuAberto = false;
+
+  toggleMenu() {
+    this.menuAberto = !this.menuAberto;
+  }
+
   // Função auxiliar para gerar a sigla do avatar (Ex: "João Silva" -> "JS")
   getAvatarInitials(nome: string): string {
     if (!nome) return 'IF';

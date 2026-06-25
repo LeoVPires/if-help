@@ -1,18 +1,34 @@
-<aside class="sidebar">
+<button mat-icon-button class="mobile-toggle" (click)="toggleMenu()" aria-label="Abrir menu">
+  <mat-icon>menu</mat-icon>
+</button>
+
+<div class="sidebar-overlay" [class.open]="menuAberto" (click)="toggleMenu()"></div>
+
+<aside class="sidebar" [class.open]="menuAberto">
   <div class="logo-section">
-    <div class="logo-icon">
-      <mat-icon>school</mat-icon>
+    <div class="brand-wrapper">
+      <div class="logo-icon">
+        <mat-icon>school</mat-icon>
+      </div>
+      <div>
+        <h2>IF, Help!</h2>
+        <span>Demandas</span>
+      </div>
     </div>
-    <div>
-      <h2>IF, Help!</h2>
-      <span>Demandas</span>
-    </div>
+    <button mat-icon-button class="close-mobile-btn" (click)="toggleMenu()">
+      <mat-icon>close</mat-icon>
+    </button>
   </div>
 
   @if (authService.usuarioPerfil$ | async; as perfil) {
     <nav class="menu">
       @for (item of filtrarItemsPorRole(perfil.role); track item.route) {
-        <a [routerLink]="item.route" routerLinkActive="active" class="menu-item">
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          class="menu-item"
+          (click)="toggleMenu()"
+        >
           <mat-icon fontSet="material-symbols-rounded">{{ item.icon }}</mat-icon>
           <span>{{ item.label }}</span>
         </a>

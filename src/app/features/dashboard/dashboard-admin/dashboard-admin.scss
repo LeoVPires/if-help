@@ -22,17 +22,52 @@
   color: #6b7280;
 }
 
-.filters-row {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.85rem;
+/* =========================================
+   ÁREA DE FILTROS (Novo Layout Expansível)
+   ========================================= */
+.filters-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.filter-search,
+.main-search {
+  width: 100%;
+  margin-bottom: -0.5rem; // Compensa a margem interna do mat-form-field
+}
+
+.advanced-filters-accordion {
+  width: 100%;
+}
+
+.advanced-filters-panel {
+  background: #f8fafc; // Fundo sutil para destacar a área de filtros
+  border: 1px solid #e2e8f0;
+  border-radius: 12px !important;
+
+  mat-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #475569;
+  }
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
 .filter-select {
   width: 100%;
 }
 
+/* =========================================
+   CARDS DE RESUMO
+   ========================================= */
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -42,13 +77,15 @@
 .stat-card {
   cursor: pointer;
   padding: 1rem;
-  border-radius: 18px;
-  transition: 0.2s ease;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  border: 2px solid transparent; // Previne pulos ao ativar a borda
 }
 
 .stat-card.active {
   border-color: #1976d2;
-  box-shadow: 0 8px 22px rgba(25, 118, 210, 0.15);
+  background-color: #f0f7ff;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.1);
 }
 
 .stat-card mat-card-title {
@@ -59,24 +96,28 @@
   margin-top: 0.4rem;
 }
 
+/* =========================================
+   TABELA E RESPONSIVIDADE
+   ========================================= */
 .table-container {
-  overflow: auto;
-  border-radius: 18px;
+  overflow-x: auto; // Essencial para mobile
+  -webkit-overflow-scrolling: touch;
+  border-radius: 16px;
   background: #fff;
+  border: 1px solid #e2e8f0;
 }
 
 table {
   width: 100%;
+  min-width: 850px; // Evita que a tabela esprema demais os dados no mobile
 }
 
 .expand-col {
   width: 52px;
 }
-
 .child-marker {
   color: #64748b;
 }
-
 .child-marker-col {
   text-align: center;
 }
@@ -100,6 +141,10 @@ table {
 .demand-desc {
   display: block;
   margin-bottom: 0.45rem;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tags-area {
@@ -111,35 +156,35 @@ table {
 .badge-tag {
   padding: 0.25rem 0.6rem;
   border-radius: 999px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
+  font-weight: 500;
   background: #eef2ff;
   color: #374151;
 }
 
 .badge-tag.prioridade.baixa {
   background: #ecfdf5;
+  color: #065f46;
 }
-
 .badge-tag.prioridade.média {
   background: #eff6ff;
+  color: #1e40af;
 }
-
 .badge-tag.prioridade.alta {
   background: #fff7ed;
+  color: #9a3412;
 }
-
 .badge-tag.prioridade.crítica {
   background: #fef2f2;
+  color: #991b1b;
 }
 
 .element-row.group-row {
   background: #fafafa;
 }
-
 .element-row.child-row {
   background: #ffffff;
 }
-
 .element-row.child-row td {
   border-bottom: 1px solid #eef2f7;
 }
@@ -160,7 +205,7 @@ tr.mat-mdc-row.mdc-data-table__row.cdk-row.detail-row {
 }
 
 .detail-wrapper {
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .filhos-tabela {
@@ -170,84 +215,90 @@ tr.mat-mdc-row.mdc-data-table__row.cdk-row.detail-row {
 }
 
 .filho-row {
-  // max-height: 56.2px;
   display: grid;
-  grid-template-columns:
-    62px minmax(90px, 1.9fr) minmax(0px, 1.8fr) minmax(260px, 2.9fr) minmax(110px, 0.5fr)
-    175px;
-  align-items: stretch;
-  border-bottom: 1px solid #161616;
+  grid-template-columns: 62px minmax(90px, 1fr) minmax(150px, 1.5fr) minmax(260px, 2fr) minmax(
+      110px,
+      1fr
+    ) 80px;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
   background: #fff;
+  padding: 0.5rem 1rem;
+}
 
-  padding-left: 1.5rem;
-  padding-right: 3rem;
+.filho-agrupado {
+  background: linear-gradient(90deg, rgba(25, 118, 210, 0.04), rgba(25, 118, 210, 0.01));
 }
 
 .filho-cell {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.15rem;
-}
-
-.filho-agrupado {
-  background: linear-gradient(90deg, rgba(25, 118, 210, 0.03), rgba(25, 118, 210, 0.01));
+  gap: 0.2rem;
 }
 
 .actions-cell {
   align-items: center;
-  justify-content: center;
 }
 
 .empty-state {
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 3rem 1rem;
   color: #6b7280;
+  font-size: 1.1rem;
 }
 
+/* =========================================
+   MEDIA QUERIES (MOBILE E TABLET)
+   ========================================= */
 @media (max-width: 1200px) {
-  .filters-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .summary-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .filho-row {
-    grid-template-columns:
-      42px minmax(80px, 0.9fr) minmax(160px, 1fr) minmax(220px, 1.4fr) minmax(100px, 0.6fr)
-      80px;
+  .filters-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 900px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .filho-row {
+    // Organiza as linhas expandidas em um layout empilhado
     grid-template-columns: 42px 1fr;
+    gap: 0.5rem;
+    padding: 1rem;
   }
 
   .filho-row .filho-cell:nth-child(n + 3) {
     grid-column: 2 / -1;
   }
 
-  .filho-row .filho-cell:nth-child(5),
-  .filho-row .filho-cell:nth-child(6) {
-    padding-top: 0;
+  .actions-cell {
+    align-items: flex-start;
   }
 }
 
-@media (max-width: 768px) {
-  .filters-row {
-    grid-template-columns: 1fr;
+@media (max-width: 600px) {
+  .dashboard-container {
+    padding: 16px;
   }
 
   .dash-header {
-    align-items: flex-start;
     flex-direction: column;
+    align-items: flex-start;
     gap: 0.5rem;
   }
 
-  .detail-header {
-    flex-direction: column;
+  .filters-grid {
+    grid-template-columns: 1fr; // Um filtro por linha no celular
+  }
+
+  // Tira o arredondamento agressivo em telas muito finas para ganhar espaço
+  .table-container {
+    border-radius: 8px;
   }
 }

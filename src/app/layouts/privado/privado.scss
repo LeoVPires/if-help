@@ -5,8 +5,13 @@
 
 .content {
   flex: 1;
-  // padding: 10px;
   margin-left: 250px;
   min-height: 100vh;
   background: var(--mat-sys-surface-container-low);
+}
+
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0;
+  }
 }

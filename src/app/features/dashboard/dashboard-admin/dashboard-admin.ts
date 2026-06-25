@@ -40,6 +40,7 @@ import { ChamadosService } from '../../../core/services/chamados';
 import { AgrupamentosService } from '../../../core/services/agrupamento';
 
 import { AgrupamentoDialogComponent } from './agrupamento-dialog/agrupamento-dialog';
+import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 
 interface FilterState {
   status: string;
@@ -82,6 +83,8 @@ type DashboardRow =
     MatTooltipModule,
     MatBadgeModule,
     MatDialogModule,
+    MatAccordion,
+    MatExpansionModule,
   ],
   templateUrl: './dashboard-admin.html',
   styleUrl: './dashboard-admin.scss',

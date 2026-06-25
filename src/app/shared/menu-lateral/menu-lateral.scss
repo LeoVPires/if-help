@@ -1,56 +1,118 @@
 :host {
   display: block;
-  height: 100vh;
-  position: fixed;
+  /* Removemos o height fixed do :host para não bugar no mobile */
 }
 
+/* =========================================
+   BOTÃO MOBILE E OVERLAY (Padrão: Ocultos)
+   ========================================= */
+.mobile-toggle {
+  display: none; // Escondido no PC
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 998;
+  background: var(--mat-sys-surface);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: var(--mat-sys-on-surface);
+}
+
+.sidebar-overlay {
+  display: none; // Escondido no PC
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100dvh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none; // Não clica se estiver invisível
+
+  &.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.close-mobile-btn {
+  display: none; // Escondido no PC
+}
+
+/* =========================================
+   SIDEBAR PRINCIPAL (Layout Base / Desktop)
+   ========================================= */
 .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 250px;
   height: 100vh;
+  height: 100dvh; // Melhor para navegadores mobile
   display: flex;
   flex-direction: column;
   background: var(--mat-sys-surface);
   border-right: 1px solid var(--mat-sys-outline-variant);
-  padding: 10px;
-  // padding-bottom: 24px;
+  padding: 16px 10px;
   box-sizing: border-box;
+  z-index: 1000;
+  transition: transform 0.3s ease-in-out;
 }
 
 .logo-section {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 40px;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding: 0 8px;
+
+  .brand-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
 
   .logo-icon {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--mat-sys-primary);
     color: var(--mat-sys-on-primary);
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
   }
 
   h2 {
     margin: 0;
-    font-size: 24px;
-    line-height: 1;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--mat-sys-on-surface);
   }
 
   span {
     color: var(--mat-sys-on-surface-variant);
-    font-size: 14px;
+    font-size: 13px;
   }
 }
 
 .menu {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   flex: 1;
-  overflow-y: auto; // Garante rolagem caso a tela seja muito baixa
+  overflow-y: auto;
+  padding-right: 4px; // Espaço para barra de rolagem não colar
 }
 
 .menu-item {
@@ -62,25 +124,29 @@
   border-radius: 12px;
   text-decoration: none;
   color: var(--mat-sys-on-surface);
-  transition: 0.2s ease;
+  font-weight: 500;
+  transition: all 0.2s ease;
 
   &:hover {
-    background: color-mix(in srgb, var(--mat-sys-primary) 10%, transparent);
+    background: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
   }
 
   &.active {
-    background: var(--mat-sys-primary);
-    color: var(--mat-sys-on-primary);
+    background: color-mix(in srgb, var(--mat-sys-primary) 15%, transparent);
+    color: var(--mat-sys-primary);
     font-weight: 600;
+
+    mat-icon {
+      font-variation-settings: 'FILL' 1; // Preenche o ícone no Material Symbols
+    }
   }
 }
 
-// Rodapé fixado na base do Menu
 .footer-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: auto; // Força empurrar tudo para baixo
+  margin-top: auto;
   padding-top: 16px;
   border-top: 1px solid var(--mat-sys-outline-variant);
 }
@@ -92,13 +158,13 @@
   padding: 12px;
   border-radius: 16px;
   background: var(--mat-sys-surface-container);
-  overflow: hidden; // Previne estouro de textos longos
+  overflow: hidden;
 }
 
 .avatar {
-  width: 44px;
-  height: 44px;
-  min-width: 44px; // Não deforma se o texto do lado crescer
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
   border-radius: 50%;
   background: var(--mat-sys-primary-container);
   color: var(--mat-sys-on-primary-container);
@@ -106,7 +172,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .user-info {
@@ -115,7 +181,7 @@
   overflow: hidden;
 
   .user-name {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--mat-sys-on-surface);
     white-space: nowrap;
     overflow: hidden;
@@ -130,15 +196,14 @@
     text-overflow: ellipsis;
   }
 
-  // Estilização das tags de Roles baseadas em cores semânticas
   .role-badge {
     align-self: flex-start;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
     padding: 2px 6px;
     border-radius: 6px;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     letter-spacing: 0.5px;
 
     &.admin {
@@ -149,6 +214,7 @@
       background: color-mix(in srgb, #e67e22 15%, transparent);
       color: #d35400;
     }
+    &.aluno,
     &.publico {
       background: color-mix(in srgb, var(--mat-sys-primary) 15%, transparent);
       color: var(--mat-sys-primary);
@@ -156,13 +222,12 @@
   }
 }
 
-// Botão de Logout elegante integrado ao design tokens do Angular Material
 .logout-btn {
   width: 100%;
   justify-content: flex-start !important;
   color: var(--mat-sys-error) !important;
   border-radius: 12px !important;
-  height: 40px;
+  height: 44px;
 
   mat-icon {
     margin-right: 8px;
@@ -180,4 +245,33 @@
   flex: 1;
   color: var(--mat-sys-on-surface-variant);
   font-size: 14px;
+}
+
+/* =========================================
+   BREAKPOINT MOBILE (< 768px)
+   ========================================= */
+@media (max-width: 768px) {
+  .mobile-toggle {
+    display: flex; // Revela o botão sanduíche
+  }
+
+  .sidebar-overlay {
+    display: block; // Habilita a mecânica do fundo escuro
+  }
+
+  .close-mobile-btn {
+    display: block; // Revela o X para fechar
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .sidebar {
+    width: 280px; // Ligeiramente mais largo no mobile para não espremer o dedo
+    transform: translateX(-100%); // Escondido por padrão na esquerda
+    border-right: none;
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.1);
+
+    &.open {
+      transform: translateX(0); // Desliza pra dentro da tela quando menuAberto = true
+    }
+  }
 }
