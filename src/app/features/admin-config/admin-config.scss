@@ -283,3 +283,235 @@
   color: var(--mat-sys-outline);
   font-style: italic;
 }
+
+/* =======================================================
+   TABLET
+======================================================= */
+
+@media (max-width: 900px) {
+  .page-container {
+    padding: 24px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 16px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .local-actions-bar {
+    flex-wrap: wrap;
+
+    button {
+      flex: 1;
+    }
+  }
+
+  .user-row {
+    gap: 16px;
+
+    .user-role {
+      width: 180px;
+    }
+  }
+}
+
+/* =======================================================
+   MOBILE
+======================================================= */
+
+@media (max-width: 600px) {
+  .page-container {
+    padding: 16px;
+  }
+
+  .page-header {
+    margin-bottom: 28px;
+
+    h1 {
+      font-size: 26px;
+    }
+
+    p {
+      font-size: 14px;
+    }
+  }
+
+  .config-section {
+    margin-bottom: 36px;
+  }
+
+  .section-header {
+    h2 {
+      font-size: 18px;
+    }
+
+    p {
+      font-size: 13px;
+    }
+
+    button {
+      width: 100%;
+    }
+  }
+
+  /* ------------------------
+     Categorias
+  ------------------------- */
+
+  .list-container {
+    max-height: 260px;
+  }
+
+  .list-item {
+    padding: 14px;
+    align-items: flex-start;
+
+    .item-icon {
+      width: 40px;
+      height: 40px;
+      margin-right: 12px;
+    }
+
+    .item-content {
+      strong {
+        font-size: 15px;
+      }
+
+      span {
+        font-size: 12px;
+      }
+    }
+
+    .item-actions {
+      margin-left: 8px;
+    }
+  }
+
+  /* ------------------------
+     Locais
+  ------------------------- */
+
+  .locais {
+    max-height: 320px;
+  }
+
+  .locais-accordion {
+    mat-panel-title {
+      min-width: auto;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      strong {
+        font-size: 14px;
+        font-weight: 500; // em vez de bold
+      }
+    }
+
+    .panel-icon {
+      flex-shrink: 0; // impede o ícone de ser esmagado
+      width: 22px;
+      height: 22px;
+      font-size: 22px;
+      margin-right: 0;
+    }
+
+    mat-panel-description {
+      display: none;
+    }
+  }
+
+  .local-actions-bar {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .ambiente-item {
+    padding: 8px 12px;
+    min-height: 44px;
+
+    .ambiente-identidade {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .panel-icon {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        font-size: 20px;
+        margin: 0;
+      }
+
+      .ambiente-nome {
+        font-size: 13px;
+        font-weight: 500;
+      }
+    }
+
+    .ambiente-actions {
+      display: flex;
+      gap: 2px;
+
+      button {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+
+        mat-icon {
+          font-size: 20px;
+        }
+      }
+    }
+  }
+
+  /* ------------------------
+     Usuários
+  ------------------------- */
+
+  .access-card mat-card-content {
+    padding: 16px;
+  }
+  .user-row {
+    flex-direction: column; // Joga o select de cargo pra baixo do nome
+    align-items: stretch;
+
+    .user-info {
+      strong,
+      span {
+        white-space: normal; // Permite quebrar linha caso o email seja muito longo
+      }
+    }
+
+    .user-role {
+      width: 100%; // Retira os 220px fixos que quebravam o card
+
+      mat-form-field {
+        width: 100%;
+      }
+    }
+  }
+
+  .search-field {
+    margin-bottom: 18px;
+  }
+
+  /* ------------------------
+     Material Buttons
+  ------------------------- */
+
+  button[mat-stroked-button],
+  button[mat-button] {
+    justify-content: center;
+  }
+}

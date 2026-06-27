@@ -23,6 +23,7 @@ import { Chamado, TipoDemanda, LocalCampus, AmbienteLocal, Nota } from '../../co
 import { ChamadosService } from '../../core/services/chamados';
 import { AuthService, UserPerfil } from '../../core/services/auth';
 import { ConfigurarLocaisService } from '../../core/services/configurar-locais';
+import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 
 interface FilterState {
   status: string;
@@ -50,6 +51,8 @@ interface FilterState {
     MatButtonModule,
     MatTooltipModule,
     MatDialogModule,
+    MatAccordion,
+    MatExpansionModule,
   ],
   templateUrl: './meus-chamados.html',
   styleUrl: './meus-chamados.scss',
