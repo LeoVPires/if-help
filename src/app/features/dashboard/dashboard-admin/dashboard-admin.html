@@ -157,10 +157,10 @@
           @if (row.kind === 'agrupamento') {
             <div class="cell-id">
               <strong>AGRUPAMENTO</strong>
-              <span>#{{ row.agrupamento.id }}</span>
+              <span>{{ row.agrupamento.id }}</span>
             </div>
           } @else {
-            <strong>#{{ row.chamado.id }}</strong>
+            <strong>{{ row.chamado.id }}</strong>
           }
         </td>
       </ng-container>
@@ -233,13 +233,15 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
 
         <td mat-cell *matCellDef="let row">
-          <strong>
-            @if (row.kind === 'agrupamento') {
-              {{ row.agrupamento.status }}
-            } @else {
-              {{ row.chamado.status }}
-            }
-          </strong>
+          @if (row.kind === 'agrupamento') {
+            <strong class="badge-tag status" [ngClass]="row.agrupamento.status | lowercase">{{
+              row.agrupamento.status
+            }}</strong>
+          } @else {
+            <strong class="badge-tag status" [ngClass]="row.chamado.status | lowercase">{{
+              row.chamado.status
+            }}</strong>
+          }
         </td>
       </ng-container>
 
@@ -325,7 +327,7 @@
                     </div>
 
                     <div class="filho-cell">
-                      <strong>#{{ filho.id }}</strong>
+                      <strong>{{ filho.id }}</strong>
                     </div>
 
                     <div class="filho-cell">
@@ -356,7 +358,9 @@
                     </div>
 
                     <div class="filho-cell">
-                      <strong>{{ filho.status }}</strong>
+                      <strong class="badge-tag status" [ngClass]="filho.status | lowercase">{{
+                        filho.status
+                      }}</strong>
                     </div>
 
                     <div class="filho-cell actions-cell">

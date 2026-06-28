@@ -160,6 +160,22 @@ table {
   font-weight: 500;
   background: #eef2ff;
   color: #374151;
+  &.aberto {
+    background: #e3f2fd;
+    color: #1976d2;
+  }
+  &.em.execução {
+    background: #fff3e0;
+    color: #f57c00;
+  }
+  &.fechado {
+    background: #e8f5e9;
+    color: #388e3c;
+  }
+  &.cancelado {
+    background: #ffebee;
+    color: #d32f2f;
+  }
 }
 
 .badge-tag.prioridade.baixa {
@@ -216,10 +232,9 @@ tr.mat-mdc-row.mdc-data-table__row.cdk-row.detail-row {
 
 .filho-row {
   display: grid;
-  grid-template-columns: 62px minmax(90px, 1fr) minmax(150px, 1.5fr) minmax(260px, 2fr) minmax(
-      110px,
-      1fr
-    ) 80px;
+  grid-template-columns:
+    62px minmax(90px, 1fr) minmax(150px, 1.5fr) minmax(260px, 2fr) minmax(110px, 1fr)
+    80px;
   align-items: center;
   border-bottom: 1px solid #e2e8f0;
   background: #fff;
@@ -248,57 +263,320 @@ tr.mat-mdc-row.mdc-data-table__row.cdk-row.detail-row {
   font-size: 1.1rem;
 }
 
-/* =========================================
-   MEDIA QUERIES (MOBILE E TABLET)
-   ========================================= */
-@media (max-width: 1200px) {
-  .filters-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 900px) {
-  .summary-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .filters-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .filho-row {
-    // Organiza as linhas expandidas em um layout empilhado
-    grid-template-columns: 42px 1fr;
-    gap: 0.5rem;
-    padding: 1rem;
-  }
-
-  .filho-row .filho-cell:nth-child(n + 3) {
-    grid-column: 2 / -1;
-  }
-
-  .actions-cell {
-    align-items: flex-start;
-  }
-}
-
+/* =======================================================
+   MOBILE OTIMIZAÇÃO (Telas menores que 600px)
+======================================================= */
 @media (max-width: 600px) {
+  * {
+    box-sizing: border-box;
+  }
+
   .dashboard-container {
-    padding: 16px;
-  }
+    padding: 12px;
+    max-width: 100vw;
+    overflow-x: clip;
 
-  .dash-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
+    .dash-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
 
-  .filters-grid {
-    grid-template-columns: 1fr; // Um filtro por linha no celular
-  }
+      .title-area h1 {
+        font-size: 20px;
+      }
+      .title-area p {
+        font-size: 14px;
+      }
+    }
 
-  // Tira o arredondamento agressivo em telas muito finas para ganhar espaço
-  .table-container {
-    border-radius: 8px;
+    .filters-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .summary-cards {
+      display: flex;
+      flex-direction: column;
+      & mat-card-subtitle {
+        font-size: 16px;
+      }
+      & mat-card-title {
+        font-size: 16px;
+      }
+    }
+
+    /* ---------------------------------------------------
+       Transformação da Tabela em Cards Responsivos
+    --------------------------------------------------- */
+    .table-container {
+      background: transparent;
+      border: none;
+      overflow-x: clip;
+
+      table {
+        display: block;
+
+        thead,
+        tr[mat-header-row] {
+          display: none;
+        }
+        tbody {
+          display: block;
+        }
+
+        tr.element-row {
+          display: flex;
+          flex-direction: column;
+          background: white;
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+          margin-bottom: 16px;
+          padding: 16px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+          height: auto !important;
+          position: relative; // Necessário para fixar o botão de expandir no canto
+          width: 92vw;
+
+          & > * {
+            padding: 5px 0;
+          }
+
+          &:hover {
+            background-color: white;
+          }
+          &.group-row {
+            border-left: 4px solid #1976d2;
+          } // Destaque visual para o agrupamento
+          td.mat-column-id {
+            border-top: 1px solid #333;
+          }
+        }
+
+        td.mat-mdc-cell {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 12px 0 !important;
+          width: 100%;
+
+          &:last-child {
+            border-bottom: none;
+            padding-bottom: 0 !important;
+          }
+
+          &::before {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: block;
+          }
+
+          /* --- Ajustes específicos por coluna --- */
+
+          &.expand-col {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 0 !important;
+            border: none;
+            width: auto;
+            &::before {
+              display: none;
+            }
+          }
+
+          &.mat-column-id {
+            padding-top: 0 !important;
+            padding-right: 40px !important; // Deixa espaço pro botão expandir não sobrepor
+
+            .cell-id {
+              flex-direction: row;
+              align-items: center;
+              gap: 8px;
+            }
+          }
+
+          &.mat-column-localizacao {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 8px;
+
+            &::before {
+              grid-column: 1 / -1;
+              margin-bottom: 0;
+            }
+
+            .cell-location {
+              grid-column: 1;
+            }
+            .text-muted {
+              grid-column: 2;
+              margin-top: 0;
+              text-align: right;
+            }
+          }
+
+          &.mat-column-demanda {
+            .demand-desc {
+              white-space: normal !important;
+              word-break: break-word;
+              line-height: 1.5;
+              max-width: 100%;
+            }
+          }
+
+          &.mat-column-status {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0 !important;
+            &::before {
+              content: 'Status Atual:';
+              margin-bottom: 0;
+            }
+          }
+
+          &.mat-column-acoes {
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 8px;
+            padding-top: 20px !important;
+            border-top: 1px solid #f0f0f0;
+            border-bottom: none;
+
+            &::before {
+              display: none;
+            }
+            button {
+              flex: 1;
+              height: 48px;
+            }
+          }
+        }
+
+        /* ---------------------------------------------------
+           Detalhes Expandidos (Linhas Filhas / Agrupamentos)
+        --------------------------------------------------- */
+        tr.detail-row {
+          display: block;
+          height: auto !important;
+          margin-bottom: 16px;
+          margin-top: -24px; // Puxa os filhos pra colar no card pai
+        }
+
+        .detail-cell {
+          padding: 0 16px 16px 16px !important;
+          background: transparent;
+        }
+
+        .detail-wrapper {
+          border: 1px solid #cbd5e1;
+          background: #f8fafc;
+          border-radius: 0 0 8px 8px;
+          padding: 12px;
+          border-top: none;
+        }
+
+        .filhos-tabela {
+          gap: 12px;
+        }
+
+        .filho-row {
+          display: flex;
+          flex-direction: column;
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 12px;
+          gap: 0;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+          .filho-cell {
+            display: flex;
+            flex-direction: column;
+            padding: 8px 0;
+            border-bottom: 1px dashed #e2e8f0;
+            width: 100%;
+
+            &:last-child {
+              border-bottom: none;
+              padding-bottom: 0;
+            }
+
+            // Injetando labels nos mini-cards dos filhos
+            &::before {
+              font-size: 10px;
+              text-transform: uppercase;
+              color: #94a3b8;
+              font-weight: 600;
+              margin-bottom: 4px;
+            }
+
+            &.child-marker-col {
+              display: none;
+            } // Oculta a seta torta no mobile
+
+            &:nth-child(3) {
+              display: grid;
+              grid-template-columns: 1fr auto;
+              align-items: center;
+              gap: 8px;
+              &::before {
+                grid-column: 1 / -1;
+                margin-bottom: 0;
+              }
+              .cell-location {
+                grid-column: 1;
+              }
+              .text-muted {
+                grid-column: 2;
+                margin-top: 0;
+                text-align: right;
+              }
+            }
+
+            &:nth-child(4) {
+              .demand-desc {
+                white-space: normal !important;
+                word-break: break-word;
+              }
+            }
+
+            &:nth-child(5) {
+              flex-direction: row;
+              justify-content: space-between;
+              align-items: center;
+              &::before {
+                content: 'Status:';
+                margin-bottom: 0;
+              }
+            }
+
+            &.actions-cell {
+              margin-top: 8px;
+              padding-top: 12px;
+              border-top: 1px solid #f0f0f0;
+              flex-direction: row;
+              justify-content: center;
+              button {
+                width: 100%;
+                height: 48px;
+              }
+            }
+          }
+        }
+      }
+
+      mat-paginator {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+      }
+    }
   }
 }
