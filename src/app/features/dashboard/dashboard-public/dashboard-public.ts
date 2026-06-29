@@ -30,6 +30,7 @@ import {
   TipoDemanda,
 } from '../../../core/modals/chamado';
 import { ConfigurarLocaisService } from '../../../core/services/configurar-locais';
+import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 
 interface FilterState {
   search: string;
@@ -71,6 +72,8 @@ type DashboardRow =
     MatSelectModule,
     MatButtonModule,
     MatTooltipModule,
+    MatAccordion,
+    MatExpansionModule,
   ],
   templateUrl: './dashboard-public.html',
   styleUrl: './dashboard-public.scss',

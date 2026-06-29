@@ -1,133 +1,68 @@
+/* ==========================================================================
+   LAYOUT E WRAPPER PRINCIPAL
+   ========================================================================== */
 .page-wrapper {
-  padding: 24px;
-  max-width: 1800px;
+  padding: 32px;
+  max-width: 1300px;
   margin: 0 auto;
 }
 
-/* =========================
-   HEADER
-========================= */
-
+/* Header Area */
 .detail-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-.left-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.back-btn {
-  margin-top: 4px;
-}
-
-.title-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.title-row {
-  display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant, var(--sys-outline-variant));
 
-  h1 {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 600;
-    color: var(--mat-sys-on-surface);
+  .left-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .back-btn {
+      background-color: var(--mat-sys-surface-container, var(--sys-surface-container));
+      color: var(--mat-sys-on-surface, var(--sys-on-surface));
+    }
+
+    .title-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 500;
+        color: var(--mat-sys-on-surface, var(--sys-on-surface));
+      }
+    }
+
+    .timestamp {
+      margin: 4px 0 0 0;
+      color: var(--mat-sys-outline, var(--sys-outline));
+      font-size: 14px;
+    }
+  }
+
+  .right-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
 }
 
-.timestamp {
-  margin: 0;
-  color: var(--mat-sys-on-surface-variant);
-  font-size: 0.9rem;
-}
-
-.right-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-/* =========================
-   STATUS
-========================= */
-
-.status-indicator {
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border: 1px solid transparent;
-}
-
-.status-indicator.aberto {
-  background: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
-  color: var(--mat-sys-primary);
-}
-
-.status-indicator.andamento {
-  background: color-mix(in srgb, var(--mat-sys-tertiary) 15%, transparent);
-  color: var(--mat-sys-tertiary);
-}
-
-.status-indicator.fechado {
-  background: color-mix(in srgb, var(--mat-sys-error) 10%, transparent);
-  color: var(--mat-sys-error);
-}
-
-/* =========================
-   PRIORIDADE
-========================= */
-
-.badge-priority {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border: 1px solid var(--mat-sys-outline-variant);
-}
-
-.badge-priority.baixa {
-  color: var(--mat-sys-primary);
-}
-
-.badge-priority.media {
-  color: var(--mat-sys-tertiary);
-}
-
-.badge-priority.alta {
-  color: var(--mat-sys-error);
-}
-
-.badge-priority.critica,
-.badge-priority.crítica {
-  color: var(--mat-sys-error);
-  font-weight: 700;
-}
-
-/* =========================
-   LAYOUT
-========================= */
-
+/* Grid de Layout Principal */
 .content-grid {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(350px, 1fr);
-  gap: 24px;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 32px;
   align-items: start;
 }
 
@@ -138,39 +73,96 @@
   gap: 24px;
 }
 
-.titulo {
-  padding-bottom: 10px;
+/* ==========================================================================
+   BADGES (STATUS E PRIORIDADE)
+   ========================================================================== */
+.status-indicator {
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+  display: inline-flex;
+  align-items: center;
+
+  /* Status Padrão / Aberto */
+  background-color: var(--mat-sys-primary-container, #e0e0e0);
+  color: var(--mat-sys-on-primary-container, #333333);
+
+  &.aberto {
+    background-color: #dbeafe; /* Azul claro */
+    color: #1e40af;
+  }
+
+  &.em\ execução,
+  &.andamento {
+    background-color: #fef3c7; /* Amarelo/Âmbar */
+    color: #92400e;
+  }
+
+  &.fechado {
+    background-color: #dcfce7; /* Verde claro */
+    color: #166534;
+  }
+
+  &.cancelado {
+    background-color: #f3f4f6; /* Cinza */
+    color: #374151;
+  }
 }
 
-/* =========================
-   CARDS
-========================= */
-
-.info-card,
-.solicitante-card,
-.notes-card {
-  border-radius: 20px;
-}
-
-mat-card-title {
+.badge-priority {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: var(--mat-sys-on-surface);
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--mat-sys-outline-variant, var(--sys-outline-variant));
+  font-size: 14px;
+  font-weight: 500;
+  background-color: var(--mat-sys-surface-container-low, var(--sys-surface-container-low));
+  color: var(--mat-sys-on-surface, var(--sys-on-surface));
+
+  &.baixa {
+    background-color: #f3f4f6;
+    color: #4b5563;
+  }
+
+  &.média,
+  &.media {
+    background-color: #e0f2fe;
+    border-color: #bae6fd;
+    color: #0369a1;
+  }
+
+  &.alta {
+    background-color: #ffedd5;
+    border-color: #fed7aa;
+    color: #c2410c;
+  }
+
+  &.crítica,
+  &.critica {
+    background-color: #fee2e2;
+    border-color: #fca5a5;
+    color: #991b1b;
+    mat-icon {
+      color: #b91c1c;
+    }
+  }
 }
 
-/* =========================
-   FORMULÁRIO
-========================= */
-
+/* ==========================================================================
+   FORMULÁRIOS REATIVOS
+   ========================================================================== */
 .fields-row {
   display: flex;
   gap: 16px;
-  flex-wrap: wrap;
+  margin-bottom: 8px;
 
   mat-form-field {
     flex: 1;
-    min-width: 220px;
+    width: 100%;
   }
 }
 
@@ -183,10 +175,9 @@ mat-card-title {
   margin-top: 12px;
 }
 
-/* =========================
-   CHAMADOS AGRUPADOS
-========================= */
-
+/* ==========================================================================
+   LISTAGEM DE CHAMADOS VINCULADOS (Membros do Agrupamento)
+   ========================================================================== */
 .members-list {
   display: flex;
   flex-direction: column;
@@ -198,158 +189,240 @@ mat-card-title {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container, var(--sys-surface-container));
+  border: 1px solid var(--mat-sys-outline-variant, var(--sys-outline-variant));
 
-  padding: 14px;
-  border-radius: 14px;
+  .member-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0; /* Protege contra quebras forçadas de flexbox */
 
-  background: var(--mat-sys-surface-container-low);
-  border: 1px solid var(--mat-sys-outline-variant);
+    strong {
+      color: var(--mat-sys-primary, var(--sys-primary));
+      font-size: 15px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--mat-sys-on-surface, var(--sys-on-surface));
+    }
+
+    .data {
+      font-size: 12px;
+      color: var(--mat-sys-outline, var(--sys-outline));
+      margin-top: 2px;
+    }
+  }
+
+  button[mat-icon-button] {
+    flex-shrink: 0;
+  }
 }
 
-.member-main {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  .data {
-    font-size: smaller;
-  }
-
-  strong {
-    color: var(--mat-sys-primary);
-  }
-
-  p {
-    margin: 0;
-    color: var(--mat-sys-on-surface-variant);
-  }
-}
-
-/* =========================
-   NOTAS
-========================= */
-
+/* ==========================================================================
+   NOTAS INTERNAS E HISTÓRICO
+   ========================================================================== */
 .notes-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-
-  max-height: 800px;
+  gap: 12px;
+  margin-bottom: 20px;
+  max-height: 450px;
   overflow-y: auto;
   padding-right: 4px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--mat-sys-outline-variant, var(--sys-outline-variant));
+    border-radius: 4px;
+  }
 }
 
 .note-box {
-  padding: 14px;
-  border-radius: 16px;
+  background-color: var(--mat-sys-surface-container, var(--sys-surface-container));
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--mat-sys-outline-variant, var(--sys-outline-variant));
 
-  background: var(--mat-sys-surface-container-low);
-  border: 1px solid var(--mat-sys-outline-variant);
+  .note-source {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--mat-sys-primary, var(--sys-primary));
+    margin-bottom: 6px;
+  }
+
+  .note-text {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--mat-sys-on-surface, var(--sys-on-surface));
+  }
+
+  .note-meta {
+    font-size: 12px;
+    color: var(--mat-sys-outline, var(--sys-outline));
+    text-align: right;
+  }
 }
-
-.note-source {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  color: var(--mat-sys-primary);
-  margin-bottom: 8px;
-}
-
-.note-text {
-  margin: 0;
-  color: var(--mat-sys-on-surface);
-  line-height: 1.5;
-}
-
-.note-meta {
-  margin-top: 10px;
-  font-size: 0.8rem;
-  color: var(--mat-sys-on-surface-variant);
-}
-
-/* =========================
-   NOVA NOTA
-========================= */
 
 .add-note-box {
-  margin-top: 20px;
+  border-top: 1px dashed var(--mat-sys-outline-variant, var(--sys-outline-variant));
+  padding-top: 20px;
+
+  .add-note-btn {
+    width: 100%;
+    margin-top: 8px;
+  }
 }
 
-.add-note-btn {
-  width: 100%;
-}
+/* ==========================================================================
+   CARDS & BOTÕES DE AÇÃO
+   ========================================================================== */
+mat-card {
+  background-color: var(--mat-sys-surface-container-low, var(--sys-surface-container-low));
+  border-radius: 20px;
+  padding: 16px;
+  border: 1px solid var(--mat-sys-outline-variant, var(--sys-outline-variant));
 
-/* =========================
-   AÇÕES
-========================= */
+  mat-card-title {
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    color: var(--mat-sys-on-surface, var(--sys-on-surface));
+
+    mat-icon {
+      color: var(--mat-sys-primary, var(--sys-primary));
+    }
+  }
+}
 
 .form-actions-bar {
+  margin-top: 16px;
   display: flex;
   justify-content: flex-end;
+
+  .save-all-btn {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    font-weight: 500;
+  }
 }
 
-.save-all-btn {
-  min-width: 280px;
-  height: 48px;
+.loading-box {
+  min-height: 400px;
+  color: var(--mat-sys-outline, var(--sys-outline));
+  font-weight: 500;
+  gap: 16px;
 }
-
-/* =========================
-   UTILITÁRIOS
-========================= */
 
 .text-muted {
-  color: var(--mat-sys-on-surface-variant);
+  color: var(--mat-sys-outline, var(--sys-outline));
 }
 
-/* =========================
-   RESPONSIVO
-========================= */
-
-@media (max-width: 1200px) {
+/* ==========================================================================
+   RESPONSIVIDADE ADAPTATIVA (TABLETS - BREAKPOINT 950PX)
+   ========================================================================== */
+@media (max-width: 950px) {
   .content-grid {
     grid-template-columns: 1fr;
   }
 
-  .notes-list {
-    max-height: 500px;
-  }
-}
-
-@media (max-width: 768px) {
-  .page-wrapper {
-    padding: 16px;
-  }
-
   .detail-header {
     flex-direction: column;
-  }
+    align-items: flex-start;
+    gap: 16px;
 
-  .left-header {
-    width: 100%;
-  }
-
-  .right-header {
-    width: 100%;
-
-    button {
+    .right-header {
       width: 100%;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 12px;
+
+      button {
+        flex: 1;
+        min-width: 150px;
+      }
     }
   }
 
   .fields-row {
     flex-direction: column;
+    gap: 0;
+  }
+}
 
-    mat-form-field {
-      width: 100%;
+/* ==========================================================================
+   RESPONSIVIDADE SMARTPHONES (MOBILE - BREAKPOINT 600PX)
+   ========================================================================== */
+@media (max-width: 600px) {
+  .page-wrapper {
+    padding: 16px;
+  }
+
+  .detail-header {
+    margin-bottom: 24px;
+
+    .left-header {
+      gap: 12px;
+
+      .title-row {
+        flex-wrap: wrap;
+        gap: 8px;
+
+        h1 {
+          font-size: 22px;
+        }
+      }
+    }
+
+    .right-header {
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      gap: 10px;
+
+      button {
+        padding: 4px;
+      }
+
+      button,
+      .badge-priority {
+        justify-content: center;
+        // width: 100%;
+      }
     }
   }
 
-  .title-row h1 {
-    font-size: 1.5rem;
+  .content-grid,
+  .main-column,
+  .side-column {
+    gap: 16px;
   }
 
-  .save-all-btn {
-    width: 100%;
+  mat-card {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .member-row {
+    padding: 12px;
+    gap: 10px;
+
+    .member-main p {
+      font-size: 13px;
+    }
   }
 }

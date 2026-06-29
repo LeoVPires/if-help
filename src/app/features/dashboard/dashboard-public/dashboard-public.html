@@ -6,7 +6,7 @@
     </div>
   </header>
 
-  <div class="filters-row">
+  <div class="filters-container">
     <mat-form-field appearance="outline" class="filter-search">
       <mat-icon matPrefix>search</mat-icon>
       <input
@@ -15,74 +15,71 @@
         placeholder="Buscar por local, ambiente, tipo ou descrição..."
       />
     </mat-form-field>
+    <mat-accordion class="advanced-filters-accordion">
+      <mat-expansion-panel elevation="0" class="advanced-filters-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>tune</mat-icon>
+            <span>Filtros Avançados</span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
 
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Categoria</mat-label>
-      <mat-select (selectionChange)="aplicarFiltroSelect('categoria', $event.value)">
-        <mat-option value="">Todas as Categorias</mat-option>
+        <div class="filters-grid">
+          <mat-form-field appearance="outline" class="filter-select">
+            <mat-label>Categoria</mat-label>
+            <mat-select (selectionChange)="aplicarFiltroSelect('categoria', $event.value)">
+              <mat-option value="">Todas as Categorias</mat-option>
+              @for (categoria of categoriasDisponiveis; track categoria) {
+                <mat-option [value]="categoria">{{ categoria }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
 
-        @for (categoria of categoriasDisponiveis; track categoria) {
-          <mat-option [value]="categoria">
-            {{ categoria }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+          <mat-form-field appearance="outline" class="filter-select">
+            <mat-label>Status</mat-label>
+            <mat-select (selectionChange)="aplicarFiltroSelect('status', $event.value)">
+              <mat-option value="">Qualquer status</mat-option>
+              @for (status of statusPossiveis; track status) {
+                <mat-option [value]="status">{{ status }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
 
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Status</mat-label>
-      <mat-select (selectionChange)="aplicarFiltroSelect('status', $event.value)">
-        <mat-option value="">Qualquer status</mat-option>
+          <mat-form-field appearance="outline" class="filter-select">
+            <mat-label>Prioridade</mat-label>
+            <mat-select (selectionChange)="aplicarFiltroSelect('prioridade', $event.value)">
+              <mat-option value="">Todas</mat-option>
+              @for (prio of prioridadesDisponiveis; track prio) {
+                <mat-option [value]="prio">{{ prio }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
 
-        @for (status of statusPossiveis; track status) {
-          <mat-option [value]="status">
-            {{ status }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+          <mat-form-field appearance="outline" class="filter-select">
+            <mat-label>Local</mat-label>
+            <mat-select (selectionChange)="selecionarLocal($event.value)">
+              <mat-option value="">Todos os Locais</mat-option>
+              @for (local of locaisDisponiveis; track local.id) {
+                <mat-option [value]="local.nome">{{ local.nome }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
 
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Prioridade</mat-label>
-      <mat-select (selectionChange)="aplicarFiltroSelect('prioridade', $event.value)">
-        <mat-option value="">Todas</mat-option>
-
-        @for (prio of prioridadesDisponiveis; track prio) {
-          <mat-option [value]="prio">
-            {{ prio }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Local</mat-label>
-      <mat-select (selectionChange)="selecionarLocal($event.value)">
-        <mat-option value="">Todos os Locais</mat-option>
-
-        @for (local of locaisDisponiveis; track local.id) {
-          <mat-option [value]="local.nome">
-            {{ local.nome }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Ambiente</mat-label>
-      <mat-select
-        [disabled]="!filtros.local"
-        (selectionChange)="aplicarFiltroSelect('ambiente', $event.value)"
-      >
-        <mat-option value="">Todos os Ambientes</mat-option>
-
-        @for (ambiente of ambientesDisponiveis; track ambiente.id) {
-          <mat-option [value]="ambiente.nome">
-            {{ ambiente.nome }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+          <mat-form-field appearance="outline" class="filter-select">
+            <mat-label>Ambiente</mat-label>
+            <mat-select
+              [disabled]="!filtros.local"
+              (selectionChange)="aplicarFiltroSelect('ambiente', $event.value)"
+            >
+              <mat-option value="">Todos os Ambientes</mat-option>
+              @for (ambiente of ambientesDisponiveis; track ambiente.id) {
+                <mat-option [value]="ambiente.nome">{{ ambiente.nome }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
   </div>
 
   <div class="summary-cards">

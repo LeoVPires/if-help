@@ -52,7 +52,7 @@
 
     <!-- SOMENTE ADMIN -->
 
-    @if ((usuario$ | async)?.role === 'admin' || 'servidor') {
+    @if ((usuario$ | async)?.role === 'admin' || (usuario$ | async)?.role === 'servidor') {
       <div class="grid">
         <mat-form-field appearance="outline">
           <mat-label> Prioridade </mat-label>

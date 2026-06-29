@@ -22,13 +22,42 @@
   color: #6b7280;
 }
 
-.filters-row {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.85rem;
+.filters-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.filter-search,
+.main-search {
+  width: 100%;
+  margin-bottom: -0.5rem; // Compensa a margem interna do mat-form-field
+}
+
+.advanced-filters-accordion {
+  width: 100%;
+}
+
+.advanced-filters-panel {
+  background: #f8fafc; // Fundo sutil para destacar a área de filtros
+  border: 1px solid #e2e8f0;
+  border-radius: 12px !important;
+
+  mat-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #475569;
+  }
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
 .filter-select {
   width: 100%;
 }
@@ -95,10 +124,11 @@ table {
 
 .cell-location {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.5rem;
+
   .mat-icon {
-    align-self: center;
+    flex-shrink: 0;
   }
 }
 
@@ -112,10 +142,16 @@ table {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  max-width: 600px;
 }
 
 .text-muted {
   color: #6b7280;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
 }
 
 .status-badge {
@@ -129,22 +165,22 @@ table {
 
 .status-badge.aberto {
   background: #eff6ff;
-  color: #1d4ed8;
+  color: #1976d2;
 }
 
 .status-badge.execucao {
   background: #fff7ed;
-  color: #c2410c;
+  color: #f57c00;
 }
 
 .status-badge.fechado {
   background: #ecfdf5;
-  color: #15803d;
+  color: #388e3c;
 }
 
 .status-badge.cancelado {
   background: #fef2f2;
-  color: #b91c1c;
+  color: #d32f2f;
 }
 
 .element-row.group-row {
@@ -187,8 +223,8 @@ tr.mat-mdc-row.mdc-data-table__row.cdk-row.detail-row {
 .filho-row {
   display: grid;
   grid-template-columns:
-    62px minmax(220px, 2.25fr) minmax(220px, 2.2fr) minmax(130px, 0.8fr)
-    minmax(150px, 0.8fr);
+    62px minmax(220px, 2.25fr) minmax(450px, 4.8fr) minmax(130px, 1fr)
+    minmax(100px, 0fr);
   align-items: stretch;
   border-bottom: 1px solid #eef2f7;
   background: #fff;
@@ -233,46 +269,278 @@ tr.mat-mdc-row.mdc-data-table__row.cdk-row.detail-row {
   color: #6b7280;
 }
 
-@media (max-width: 1200px) {
-  .filters-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+@media (max-width: 600px) {
+  * {
+    box-sizing: border-box;
   }
 
-  .summary-cards {
-    grid-template-columns: 1fr;
-  }
+  .dashboard-container {
+    padding: 12px;
+    max-width: 100vw;
+    overflow-x: clip;
 
-  .filho-row {
-    grid-template-columns: 42px minmax(140px, 1fr) minmax(160px, 1.2fr) minmax(110px, 0.7fr) minmax(
-        130px,
-        0.7fr
-      );
-  }
-}
+    .dash-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
 
-@media (max-width: 900px) {
-  .filho-row {
-    grid-template-columns: 42px 1fr;
-  }
+      .title-area h1 {
+        font-size: 20px;
+      }
+      .title-area p {
+        font-size: 14px;
+      }
+    }
 
-  .filho-row .filho-cell:nth-child(n + 3) {
-    grid-column: 2 / -1;
-  }
+    .filters-grid {
+      grid-template-columns: 1fr;
+    }
 
-  .filho-row .filho-cell:nth-child(4),
-  .filho-row .filho-cell:nth-child(5) {
-    padding-top: 0;
-  }
-}
+    .summary-cards {
+      display: flex;
+      flex-direction: column;
+    }
 
-@media (max-width: 768px) {
-  .filters-row {
-    grid-template-columns: 1fr;
-  }
+    /* ---------------------------------------------------
+       Transformação da Tabela em Cards Responsivos
+    --------------------------------------------------- */
+    .table-container {
+      background: transparent;
+      border: none;
+      overflow-x: clip;
 
-  .dash-header {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.5rem;
+      table {
+        display: block;
+        min-width: unset;
+
+        thead,
+        tr[mat-header-row] {
+          display: none;
+        }
+        tbody {
+          display: block;
+        }
+
+        tr.element-row {
+          display: flex;
+          flex-direction: column;
+          background: white;
+          border: 1px solid #999;
+          border-radius: 8px;
+          margin-bottom: 16px;
+          padding: 16px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+          height: auto !important;
+          position: relative;
+          width: 100%;
+
+          & > * {
+            padding: 5px 0;
+          }
+          &:hover {
+            background-color: white;
+          }
+
+          &.group-row {
+            border-left: 4px solid #1976d2;
+
+            /* Aquela nossa adaptação do border top entra na primeira coluna visual: localizacao */
+            td.mat-column-localizacao {
+              border-top: 1px dashed #f0f0f0;
+              margin-top: 36px;
+              padding-top: 16px !important;
+            }
+          }
+        }
+
+        td.mat-mdc-cell {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 12px 0 !important;
+          width: 100%;
+          border-bottom: 1px dashed #f1f5f9;
+
+          &:last-child {
+            border-bottom: none;
+            padding-bottom: 0 !important;
+          }
+
+          /* Injetando Títulos nas colunas do mobile */
+          &::before {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: block;
+          }
+
+          /* --- Ajustes específicos por coluna --- */
+          &.expand-col {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 0 !important;
+            border: none;
+            width: auto;
+            &::before {
+              display: none;
+            }
+          }
+
+          &.mat-column-localizacao {
+            &::before {
+              content: 'Localização';
+            }
+            padding-right: 40px !important; /* Evita que a setinha fique em cima do texto */
+            border-bottom: none; /* Como é a primeira, já tem o border-top (se for grupo) */
+          }
+
+          &.mat-column-demanda {
+            &::before {
+              content: 'Demanda';
+            }
+
+            /* Remove a reticência no mobile, permitindo o texto quebrar a linha */
+            .cell-id strong,
+            .text-muted {
+              white-space: normal !important;
+              word-break: break-word;
+              overflow: visible;
+            }
+          }
+
+          &.mat-column-status {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            &::before {
+              content: 'Status Atual:';
+              margin-bottom: 0;
+            }
+          }
+
+          &.mat-column-abertura {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            &::before {
+              content: 'Data de Abertura:';
+              margin-bottom: 0;
+            }
+          }
+        }
+
+        /* ---------------------------------------------------
+           Detalhes Expandidos (Linhas Filhas / Agrupamentos)
+        --------------------------------------------------- */
+        tr.detail-row {
+          display: block;
+          height: auto !important;
+          margin-bottom: 16px;
+          margin-top: -24px;
+        }
+
+        .detail-cell {
+          padding: 0 16px 16px 16px !important;
+          background: transparent;
+        }
+
+        .detail-wrapper {
+          border: 1px solid #cbd5e1;
+          background: #f8fafc;
+          border-radius: 0 0 8px 8px;
+          padding: 12px;
+          border-top: none;
+        }
+
+        .filhos-tabela {
+          gap: 12px;
+        }
+
+        .filho-row {
+          display: flex;
+          flex-direction: column;
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 12px;
+          gap: 0;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+          .filho-cell {
+            display: flex;
+            flex-direction: column;
+            padding: 8px 0;
+            border-bottom: 1px dashed #e2e8f0;
+            width: 100%;
+
+            &:last-child {
+              border-bottom: none;
+              padding-bottom: 0;
+            }
+
+            /* Labels Filhos */
+            &::before {
+              font-size: 10px;
+              text-transform: uppercase;
+              color: #94a3b8;
+              font-weight: 600;
+              margin-bottom: 4px;
+            }
+
+            &.child-marker-col {
+              display: none;
+            } /* Oculta a seta torta no mobile */
+
+            &:nth-child(2) {
+              &::before {
+                content: 'Localização';
+              }
+            }
+
+            &:nth-child(3) {
+              &::before {
+                content: 'Demanda';
+              }
+              /* Permite quebra de texto nos filhos no mobile */
+              .cell-id strong,
+              .text-muted {
+                white-space: normal;
+                word-break: break-word;
+              }
+            }
+
+            &:nth-child(4) {
+              flex-direction: row;
+              justify-content: space-between;
+              align-items: center;
+              &::before {
+                content: 'Status:';
+                margin-bottom: 0;
+              }
+            }
+
+            &:nth-child(5) {
+              flex-direction: row;
+              justify-content: space-between;
+              align-items: center;
+              &::before {
+                content: 'Abertura:';
+                margin-bottom: 0;
+              }
+            }
+          }
+        }
+      }
+
+      mat-paginator {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+      }
+    }
   }
 }

@@ -325,3 +325,71 @@ mat-card {
     gap: 0;
   }
 }
+
+/* =========================================
+   Responsividade Mobile (Telas pequenas)
+   ========================================= */
+@media (max-width: 600px) {
+  /* 1. Reduz o respiro geral da página para ganhar área de leitura */
+  .page-wrapper {
+    padding: 16px;
+  }
+
+  /* 2. Ajusta o cabeçalho e reduz o peso do título */
+  .detail-header {
+    margin-bottom: 24px;
+
+    .left-header {
+      gap: 12px;
+
+      .title-row {
+        flex-wrap: wrap; /* Permite que o status desça se o ID for gigante */
+        gap: 8px;
+
+        h1 {
+          font-size: 22px; /* Fonte menor para não engolir a tela */
+        }
+      }
+    }
+
+    /* 3. Empilha os botões e a prioridade para facilitar o clique (touch target) */
+    .right-header {
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      gap: 10px;
+
+      button {
+        padding: 4px;
+      }
+      button,
+      .badge-priority {
+        justify-content: center;
+      }
+    }
+  }
+
+  /* 4. Aproxima os elementos (gaps menores) */
+  .content-grid,
+  .main-column,
+  .side-column {
+    gap: 16px;
+  }
+
+  /* 5. Reduz a borda e o padding interno dos cards */
+  mat-card {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  /* 6. Ajuste no perfil do solicitante caso o nome seja muito longo */
+  .user-profile {
+    gap: 12px;
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      font-size: 14px;
+    }
+  }
+}
