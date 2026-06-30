@@ -367,10 +367,12 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
       }
 
       if (f.cardFiltro === 'agrupamento') {
-        if (row.kind !== 'agrupamento') {
+        if (row.kind === 'agrupamento') {
           match = false;
-        } else if (row.filhos.length < 2) {
-          match = false;
+        } else {
+          if (!this.podeAgrupar(row.chamado)) {
+            match = false;
+          }
         }
       }
 
@@ -383,29 +385,48 @@ export class DashboardAdmin implements OnInit, OnChanges, AfterViewInit {
   // =========================================================
 
   private calcularContadores() {
-    const chamadosBase = (this.chamados ?? []).filter((c) => !c.agrupamentoId);
+    this.countAltaPrioridade = 0;
+    this.countAguardandoTriagem = 0;
 
-    this.countAltaPrioridade = chamadosBase.filter(
-      (c) => c.prioridade === 'Alta' || c.prioridade === 'Crítica',
-    ).length;
+    // Contar chamados sem agrupamento
+    for (const chamado of this.chamados ?? []) {
+      if (chamado.agrupamentoId) continue;
 
-    this.countAguardandoTriagem = chamadosBase.filter(
-      (c) => c.atribuidoPara === '' && c.status === 'Aberto',
-    ).length;
+      if (chamado.prioridade === 'Alta' || chamado.prioridade === 'Crítica') {
+        this.countAltaPrioridade++;
+      }
 
-    const gruposPorId = new Map<string, Chamado[]>();
-
-    for (const chamado of chamadosBase) {
-      if (chamado.status !== 'Aberto') continue;
-      const grupoAtual = gruposPorId.get(chamado.idGrupo) ?? [];
-      grupoAtual.push(chamado);
-      gruposPorId.set(chamado.idGrupo, grupoAtual);
+      if (chamado.status === 'Aberto' && chamado.atribuidoPara === '') {
+        this.countAguardandoTriagem++;
+      }
     }
 
-    const gruposComDuplicidade = [...gruposPorId.values()].filter((grupo) => grupo.length > 1);
+    // Contar agrupamentos como uma única linha
+    for (const agrupamento of this.agrupamentos ?? []) {
+      if (agrupamento.prioridade === 'Alta' || agrupamento.prioridade === 'Crítica') {
+        this.countAltaPrioridade++;
+      }
 
-    this.countSugestoesAgrupamento = gruposComDuplicidade.filter((grupo) => {
-      const idGrupo = grupo[0]?.idGrupo;
+      if (agrupamento.status === 'Aberto' && agrupamento.atribuidoPara === '') {
+        this.countAguardandoTriagem++;
+      }
+    }
+
+    // Sugestões de agrupamento
+    const gruposPorId = new Map<string, Chamado[]>();
+
+    for (const chamado of this.chamados ?? []) {
+      if (chamado.agrupamentoId) continue;
+      if (chamado.status !== 'Aberto') continue;
+
+      const grupo = gruposPorId.get(chamado.idGrupo) ?? [];
+      grupo.push(chamado);
+      gruposPorId.set(chamado.idGrupo, grupo);
+    }
+
+    this.countSugestoesAgrupamento = [...gruposPorId.entries()].filter(([idGrupo, grupo]) => {
+      if (grupo.length < 2) return false;
+
       return !this.agrupamentos.some((a) => a.idGrupo === idGrupo);
     }).length;
   }
