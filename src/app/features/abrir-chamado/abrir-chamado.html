@@ -12,7 +12,7 @@
       <mat-form-field appearance="outline">
         <mat-label>Local</mat-label>
 
-        <mat-select formControlName="lugar">
+        <mat-select formControlName="lugar" [disabled]="isQrCodeOriginal">
           @for (local of locais; track local.id) {
             <mat-option [value]="local.nome">
               {{ local.nome }}
@@ -26,7 +26,7 @@
       <mat-form-field appearance="outline">
         <mat-label>Ambiente</mat-label>
 
-        <mat-select formControlName="ambiente">
+        <mat-select formControlName="ambiente" [disabled]="isQrCodeOriginal">
           @for (ambiente of ambientesDisponiveis; track ambiente) {
             <mat-option [value]="ambiente">
               {{ ambiente }}

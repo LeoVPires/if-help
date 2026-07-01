@@ -47,6 +47,10 @@ export const routes: Routes = [
         component: AbrirChamado,
       },
       {
+        path: 'chamado/novo/qrcode/:local/:ambiente',
+        component: AbrirChamado,
+      },
+      {
         path: 'chamado/editar/:id',
         component: EditarChamado,
       },

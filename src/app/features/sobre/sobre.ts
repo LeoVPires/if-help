@@ -30,9 +30,9 @@ export class Sobre {
   disciplina: string = 'Gestão de Projetos';
 
   integrantes: Integrante[] = [
-    { nome: 'Elias de Almeida Sombra Neto', funcao: '' },
+    { nome: 'Elias de Almeida Sombra Neto', funcao: 'Designer / Equipe Técnica' },
     { nome: 'Geovanna Correia Castro', funcao: '' },
-    { nome: 'Ismael Sidney de Souza Silva', funcao: '' },
+    { nome: 'Ismael Sidney de Souza Silva', funcao: 'Testador / Equipe Técnica' },
     { nome: 'João Felipe Galdino de Lima', funcao: '' },
     { nome: 'Leonardo Vasconcelos Pires', funcao: 'Desenvolvedor / Equipe Técnica' },
     { nome: 'Luiz Henrique Teixeira Viana', funcao: '' },
