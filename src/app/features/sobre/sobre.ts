@@ -31,10 +31,10 @@ export class Sobre {
 
   integrantes: Integrante[] = [
     { nome: 'Elias de Almeida Sombra Neto', funcao: 'Designer / Equipe Técnica' },
-    { nome: 'Geovanna Correia Castro', funcao: '' },
+    { nome: 'Geovanna Correia Castro', funcao: 'Cinegrafista / Equipe de Campo' },
     { nome: 'Ismael Sidney de Souza Silva', funcao: 'Testador / Equipe Técnica' },
-    { nome: 'João Felipe Galdino de Lima', funcao: '' },
+    { nome: 'João Felipe Galdino de Lima', funcao: 'Entrevistador / Equipe de Campo' },
     { nome: 'Leonardo Vasconcelos Pires', funcao: 'Desenvolvedor / Equipe Técnica' },
-    { nome: 'Luiz Henrique Teixeira Viana', funcao: '' },
+    { nome: 'Luiz Henrique Teixeira Viana', funcao: 'Apresentador / Equipe de Campo' },
   ];
 }
