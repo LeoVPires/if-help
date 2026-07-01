@@ -56,16 +56,22 @@ export class AuthService {
       if (email && email.endsWith('ifce.edu.br')) {
         const userDocRef = doc(this.firestore, `usuarios/${resultado.user.uid}`);
 
-        await setDoc(
-          userDocRef,
-          {
+        // 1. Buscamos o documento no banco para ver se ele já existe
+        const userSnap = await getDoc(userDocRef);
+
+        // 2. Verificamos se é o primeiro login (documento não existe)
+        if (!userSnap.exists()) {
+          // Se não existe, salvamos as informações e definimos a role padrão
+          await setDoc(userDocRef, {
             uid: resultado.user.uid,
             email: resultado.user.email,
             nome: resultado.user.displayName,
             nomeBusca: resultado.user.displayName?.toLowerCase() ?? '',
-          },
-          { merge: true },
-        );
+            role: 'aluno', // Salva como aluno apenas na primeira vez
+          });
+        }
+        // Se o userSnap.exists() for true, ele ignora o if e não sobrescreve nada,
+        // preservando roles como 'admin' ou 'servidor'.
 
         this.router.navigate(['/dashboard']);
       } else {
