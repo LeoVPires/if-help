@@ -36,6 +36,7 @@ export class TipoDemandaDialog {
     { classe: 'ac_unit', label: 'Climatização / Ar-condicionado' },
     { classe: 'electric_bolt', label: 'Elétrica / Iluminação' },
     { classe: 'wifi', label: 'Internet' },
+    { classe: 'category', label: 'Outros' },
   ];
 
   form = this.fb.nonNullable.group({
